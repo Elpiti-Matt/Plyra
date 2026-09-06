@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "title": "My research map",
+  "sheets": [
+    {
+      "id": "product",
+      "name": "Product",
+      "notation": "free",
+      "color": "#8b5cf6",
+      "limit": 15
+    },
+    {
+      "id": "money",
+      "name": "Money",
+      "notation": "free",
+      "color": "#14b8a6",
+      "limit": 15
+    }
+  ],
+  "nodes": [
+    {
+      "id": "blend",
+      "name": "Morning blend",
+      "kind": "entity",
+      "body": "Recipe is not yet confirmed.\nSource: interview notes supplied by the author.",
+      "sheets": [
+        "product",
+        "money"
+      ],
+      "pos": {
+        "product": {
+          "x": 0,
+          "y": 0
+        },
+        "money": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "trial",
+      "name": "Roast a trial batch",
+      "kind": "process",
+      "body": "Check taste before approving the recipe.",
+      "sheets": [
+        "product"
+      ],
+      "pos": {
+        "product": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "cost",
+      "name": "Batch cost",
+      "kind": "metric",
+      "body": "Unknown. Ask for the supplier price list; do not invent a value.",
+      "sheets": [
+        "money"
+      ],
+      "pos": {
+        "money": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "test",
+      "from": "trial",
+      "to": "blend",
+      "kind": "ref"
+    },
+    {
+      "id": "price",
+      "from": "cost",
+      "to": "blend",
+      "kind": "depends"
+    }
+  ]
+}

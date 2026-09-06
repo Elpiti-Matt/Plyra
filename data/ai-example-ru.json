@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "title": "Моя исследовательская карта",
+  "sheets": [
+    {
+      "id": "product",
+      "name": "Продукт",
+      "notation": "free",
+      "color": "#8b5cf6",
+      "limit": 15
+    },
+    {
+      "id": "money",
+      "name": "Деньги",
+      "notation": "free",
+      "color": "#14b8a6",
+      "limit": 15
+    }
+  ],
+  "nodes": [
+    {
+      "id": "blend",
+      "name": "Смесь «Утро»",
+      "kind": "entity",
+      "body": "Рецепт пока не подтверждён.\nИсточник: заметки интервью, предоставленные автором.",
+      "sheets": [
+        "product",
+        "money"
+      ],
+      "pos": {
+        "product": {
+          "x": 0,
+          "y": 0
+        },
+        "money": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "trial",
+      "name": "Обжарить пробную партию",
+      "kind": "process",
+      "body": "Проверить вкус перед утверждением рецепта.",
+      "sheets": [
+        "product"
+      ],
+      "pos": {
+        "product": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "cost",
+      "name": "Себестоимость партии",
+      "kind": "metric",
+      "body": "Неизвестна. Запросить прайс поставщика; не придумывать значение.",
+      "sheets": [
+        "money"
+      ],
+      "pos": {
+        "money": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "test",
+      "from": "trial",
+      "to": "blend",
+      "kind": "ref"
+    },
+    {
+      "id": "price",
+      "from": "cost",
+      "to": "blend",
+      "kind": "depends"
+    }
+  ]
+}

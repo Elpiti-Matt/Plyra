@@ -1,0 +1,72 @@
+{
+  "date": "2026-09-05",
+  "version": "0.6.1-rc.1",
+  "typecheck": "passed",
+  "production_build": "passed",
+  "release_javascript_syntax": "passed",
+  "automated_tests": {
+    "passed": 55,
+    "failed": 0,
+    "engine": "node:test + jsdom; no layout engine",
+    "last_run": "2026-09-05"
+  },
+  "external_asset_references_in_html": 0,
+  "release_bytes": 1328298,
+  "release_sha256": "a9533e01e2b1f95c7e7182e0c74d11a6fb473dbe901e8a0b57e68d4e5ae8e01f",
+  "github_counter": "fixture aggregation passed; no public repo or live counts yet",
+  "browser_visual_qa": "not run; sites-previewd mailbox unavailable, no alternate browser route used",
+  "physical_mobile_qa": "not run",
+  "obsidian_integration": "not run",
+  "published": false,
+  "redesign": "active layer frame; solid local/dashed external/gold identity; local external-card toggle; line legend; illustrated PNG/GIF help; cross-notation design scenario",
+  "help_media": {
+    "topics": 3,
+    "languages": [
+      "ru",
+      "en"
+    ],
+    "png_files": 6,
+    "gif_files": 6,
+    "frames_per_gif": 4,
+    "duration_seconds": 8.8,
+    "type": "original instructional UI illustrations, not browser screenshots",
+    "asset_visual_inspection": "performed"
+  },
+  "cross_notation": {
+    "nodes": 13,
+    "edges": 16,
+    "sheets": 6,
+    "status": "design illustration plus native Atlas v2 traceability datasets; no native notation editor"
+  },
+  "layout": {
+    "views": [
+      "sheet",
+      "spread",
+      "flat"
+    ],
+    "algorithm": "deterministic grids and adjacency bands, greedy pair swaps, sampled cubic geometry",
+    "edge_evaluation_limit": 400,
+    "preserves": "identities, memberships, bodies and edges",
+    "undo_redo": "one atomic graph action",
+    "cancellation": "no intermediate writes",
+    "mobile": "DOM test: one visible spread layer only; physical device checks not run",
+    "reproducible_geometry_report": "docs/LAYOUT-METRICS.json"
+  },
+  "product_name": "Plyra",
+  "rebrand": {
+    "interface": "Plyra in RU and ENG",
+    "materials": "AI contract, FAQ, PNG/GIF illustrations, downloads, docs and article drafts",
+    "compatibility": "original browser storage keys, native graph v2 and Canvas metadata retained",
+    "old_visible_brand_strings_in_release_script": 0
+  },
+  "license_notice_rebuild": {
+    "date": "2026-09-06",
+    "typecheck": "passed",
+    "production_build": "passed",
+    "bundled_javascript_and_css": "identical to previous deliverable",
+    "vite_core_mit_notice": "included",
+    "project_license": "MIT; Apache-2.0 proposed, not applied",
+    "external_asset_references": 0,
+    "functional_tests": "not rerun; no application code changed"
+  }
+}

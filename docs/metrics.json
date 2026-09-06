@@ -1,0 +1,90 @@
+{
+  "roastery": {
+    "nodes": 42,
+    "edges": 43,
+    "sheets": 7,
+    "memberships": 47,
+    "multiMemberNodes": 4,
+    "droppedByTree": 5,
+    "nodesPerSheet": {
+      "product": 6,
+      "suppliers": 7,
+      "money": 7,
+      "rules": 7,
+      "equipment": 6,
+      "people": 6,
+      "roasting": 8
+    },
+    "lint": {
+      "error": 0,
+      "warn": 14,
+      "info": 0
+    }
+  },
+  "depot": {
+    "nodes": 87,
+    "edges": 167,
+    "sheets": 9,
+    "memberships": 193,
+    "multiMemberNodes": 74,
+    "droppedByTree": 106,
+    "nodesPerSheet": {
+      "ter": 24,
+      "law": 26,
+      "eco": 26,
+      "ppl": 22,
+      "tra": 16,
+      "env": 20,
+      "lea": 16,
+      "sta": 29,
+      "dat": 14
+    },
+    "lint": {
+      "error": 1,
+      "warn": 12,
+      "info": 6
+    }
+  },
+  "cross-notation-ru": {
+    "nodes": 13,
+    "edges": 16,
+    "sheets": 6,
+    "memberships": 18,
+    "multiMemberNodes": 4,
+    "droppedByTree": 5,
+    "nodesPerSheet": {
+      "process": 4,
+      "architecture": 2,
+      "states": 3,
+      "classes": 1,
+      "requirements": 4,
+      "risks": 4
+    },
+    "lint": {
+      "error": 0,
+      "warn": 1,
+      "info": 0
+    }
+  },
+  "cross-notation-en": {
+    "nodes": 13,
+    "edges": 16,
+    "sheets": 6,
+    "memberships": 18,
+    "multiMemberNodes": 4,
+    "droppedByTree": 5,
+    "nodesPerSheet": {
+      "process": 4,
+      "architecture": 2,
+      "states": 3,
+      "classes": 1,
+      "requirements": 4,
+      "risks": 4
+    },
+    "lint": {
+      "error": 0,
+      "warn": 1,
+      "info": 0
+    }
+  }
+}

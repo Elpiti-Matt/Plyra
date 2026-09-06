@@ -1,5 +1,5 @@
 # Plyra
-<img width="780" height="439" alt="Article (1)" src="https://github.com/user-attachments/assets/00808fc6-1e5d-416d-a9da-3f3f3812fa26" />
+
 
 An offline research prototype for reading knowledge graphs as a collection of bounded sheets. A node can appear on several sheets while retaining one identity and one body of text.
 

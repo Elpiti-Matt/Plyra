@@ -4,7 +4,7 @@ Knowledge maps on connected sheets. An entity has one ID, shared text and typed 
 
 **English** · [Русский](README.ru.md)
 
-**0.7.0-rc.4** · [Live demo](https://elpiti-matt.github.io/Plyra/) · [Documentation](docs/README.md) · [Project format](docs/FORMAT.md) · [Handoff](HANDOFF.md) · [Update GitHub (RU)](UPDATE-GITHUB.ru.md)
+**0.7.0-rc.4** · [Live demo](https://elpiti-matt.github.io/Plyra/) · [Documentation](docs/README.md) · [Project format](docs/FORMAT.md) ·
 
 [![Release asset downloads](https://img.shields.io/github/downloads/Elpiti-Matt/Plyra/total?label=downloads)](https://github.com/Elpiti-Matt/Plyra/releases)
 

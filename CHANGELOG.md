@@ -5,8 +5,7 @@
 - Independent Select all / Turn off all actions for node and relation type filters, including custom types; unchecked objects remain dimmed in place.
 - Helicopter view can show connections of the selected sheet only. Gold identity links fan out directly to every other appearance; other sheets and local edges stay visible.
 - The two-level mode is named Sheets / Листы consistently. Bilingual FAQ, AI prompts, examples and instructional GIFs use v3 with all six attribute types. Added `npm run ai:docs` and consistency checks.
-- Illustrated feature guides, SVG diagrams, current handoff and beginner GitHub Desktop instructions. Compared the package with Elpiti-Matt/Plyra main at 581b3b1; configured repository links.
-- 98 model/DOM tests, TypeScript and production build. Browser visual QA was blocked; no commit, push, PR, release or deployment performed.
+
 
 ## 0.7.0-rc.3 — 2026-09-09
 
@@ -15,11 +14,11 @@ Documentation bundle docs.1: refreshed publishing/manual QA/design guides and ed
 - Canvas has two levels: single-sheet editing and a free Helicopter view of all sheets, linked by upper-right minus / plus controls. Spread remains a separate comparison workspace.
 - Drag whole sheets by their headers; drag nodes within a sheet. Independent native sheet positions, scale-aware gestures, undo/redo, keyboard movement, pan and touch pinch; cancelled gestures do not commit partial moves.
 - All nodes becomes All-to-1, with one editable appearance per entity, shared text/attributes and a separate saved layout. Original memberships and the line grammar remain intact.
-- Updated bilingual help and current handoff. Validation and remaining manual checks are recorded in `docs/VALIDATION.json`.
+
 
 ## 0.7.0-rc.2 — 2026-09-09
 
-Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestricted node/relation types; notation shapes without glyphs; typed shared node attributes; uniform intra/inter-sheet line grammar; filters dim in place; draw.io geometry, JSON Canvas and BPMN DI imports; all-node stack with Rows / Nodes & edges, grouping and independent layout optimization. See `HANDOFF.md` and `docs/VALIDATION.json` for current state and limitations.
+Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestricted node/relation types; notation shapes without glyphs; typed shared node attributes; uniform intra/inter-sheet line grammar; filters dim in place; draw.io geometry, JSON Canvas and BPMN DI imports; all-node stack with Rows / Nodes & edges, grouping and independent layout optimization. 
 
 ## 0.7.0-rc.1 — 2026-09-08
 
@@ -30,8 +29,6 @@ Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestric
 - Replaced the automatic mobile Contents list with a portrait sheet graph, shared-identity lines, focus control and a manual Diagram/List switch.
 - Explained visibility filters, reference cards and identity lines. Preserved shared node editing and undo.
 - Replaced the depot scenario with a synthetic software example in RU and EN.
-- 71 model/DOM tests pass. TypeScript and production build pass. Visual browser and physical-phone checks remain pending; local HTML navigation was blocked by browser policy.
-- Added `START-HERE.ru.md` and a draw.io import example for GitHub updates and manual checks.
 
 ## Unreleased — 2026-09-06
 
@@ -43,7 +40,7 @@ Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestric
 
 - Renamed the product from Atlas to **Plyra** in both interface languages, browser title, help, generation contracts, illustrations, downloads and article drafts.
 - Updated the package name and proposed repository name to `plyra`.
-- Existing browser storage keys, graph version and Canvas metadata stay compatible. The old CLI command forwards to `scripts/plyra.mjs`.
+
 
 ## 0.6.0-rc.1 — 2026-09-05
 
@@ -51,7 +48,7 @@ Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestric
 - Scores curved links through cards, crossing pairs and shared line runs, including visible spread routes and shared identities. Dense scenes disclose a stable sample of up to 400 edges.
 - Preserves optimized and manually arranged sheet positions across fitting and reopening. Flat view has independent saved positions; native JSON, autosave, undo and redo retain both.
 - Added cooperative calculation with cancellation and a mobile button on its own row. Mobile spreads optimize only the visible sheet.
-- Added bilingual FAQ guidance, algorithm notes, reproducible geometry metrics and 12 additional automated tests (55 total). Browser and physical-device QA remain pending.
+- Added bilingual FAQ guidance, algorithm notes, reproducible geometry metrics and 12 additional automated tests (55 total). 
 
 ## 0.5.0-rc.1 — 2026-09-05
 
@@ -60,7 +57,7 @@ Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestric
 - Added hover, keyboard and touch line legends, with independent identity visibility.
 - Added three original PNG/GIF instructional walkthroughs in RU/ENG, embedded offline and played only on request. They are illustrated UI frames, not browser screenshots.
 - Added a three-step cross-model payment scenario, two validated traceability datasets and a design proposal for notation adapters and typed mappings.
-- 43 data/DOM checks pass. Browser screenshot capture and physical-device QA remain blocked by unavailable preview infrastructure.
+
 
 ## 0.4.0-rc.1 — 2026-09-05
 
@@ -71,7 +68,7 @@ Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestric
 - Added view reflow and automatic fit using actual pane proportions, including the wide middle layer.
 - Restored tilted stacked layers, layer checkboxes, labels, spacing/tilt/scale controls, connection toggles and pinch/pan handling.
 - Added a persistent map title and a prominent gradient title in Contents.
-- Browser visual and physical-device QA remain pending because the preview service is unavailable.
+
 
 ## 0.3.0-rc.1 — 2026-09-05
 
@@ -81,7 +78,7 @@ Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestric
 - Replaced ghost-node styling with labeled external references beyond a dashed boundary and fading surface.
 - Added a node creation form with target sheet, type and optional note; retained canvas double-click creation.
 - Added a one-pane mobile spread and a readable mobile stack; desktop spread/stack sidebars now open as drawers.
-- All 28 data and DOM tests pass. Browser visual QA and physical-device testing remain pending.
+
 
 ## 0.2.0-rc.1 — 2026-09-05
 

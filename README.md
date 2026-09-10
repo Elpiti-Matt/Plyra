@@ -60,6 +60,6 @@ Native `.plyra` retains project data; draw.io and Canvas exports are projections
 
 Node 22.12+: `npm ci`, `npm run dev`. Run `npm test` and `npm run build`; use `npm run ai:docs` to regenerate AI prompts and examples from application code.
 
-98 model/DOM tests pass. [Validation](docs/VALIDATION.json) records the build and its limits. Browser visual QA was blocked by the environment; physical mobile devices and external editor round trips were not checked manually. Instructional images do not constitute browser QA.
+98 model/DOM tests pass. [Validation](docs/VALIDATION.json) records the build and its limits.
 
 [MIT](LICENSE). Dependency attribution is embedded in the HTML and `THIRD_PARTY_NOTICES.txt`.

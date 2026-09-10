@@ -88,13 +88,13 @@ export function splitSheets(g: Graph): Graph {
       let id = `${s.id}-part-${1 + i / limit}`;
       while (ids.has(id)) id += "-";
       ids.add(id);
-      sheets.push({ ...s, id, name: `${s.name} · ${1 + i / limit}`, color: s.color || PALETTE[sheets.length % PALETTE.length] });
+      sheets.push({ ...s, overviewPos:undefined, id, name: `${s.name} · ${1 + i / limit}`, color: s.color || PALETTE[sheets.length % PALETTE.length] });
       local.slice(i, i + limit).forEach((n) => map.set(n.id, id));
     }
   }
   if (sheets.length > 100) throw new Error("После разбиения получилось бы больше 100 листов");
-  return { ...g, sheets, nodes: g.nodes.map((n) => {
+  return { ...g, sheets, edges:g.edges.map(e=>e.routes?{...e,routes:Object.fromEntries(Object.entries(e.routes).flatMap(([sid,route])=>{const from=mapping.get(sid)?.get(e.from),to=mapping.get(sid)?.get(e.to);return from&&from===to?[[from,route]]:[];}))}:e), nodes: g.nodes.map((n) => {
     const memberships = n.sheets.map((s) => mapping.get(s)!.get(n.id)!);
-    return { ...n, sheets: memberships, pos: Object.fromEntries(n.sheets.map((s, i) => [memberships[i], n.pos[s]])) };
+    return { ...n, sheets: memberships, pos: Object.fromEntries(n.sheets.map((s, i) => [memberships[i], n.pos[s]])),...(n.appearance?{appearance:Object.fromEntries(n.sheets.flatMap((sid,i)=>n.appearance?.[sid]?[[memberships[i],n.appearance[sid]]]:[]))}:{}) };
   }) };
 }

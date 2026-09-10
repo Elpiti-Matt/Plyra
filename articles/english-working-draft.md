@@ -46,21 +46,15 @@ That exchange has a cost. References require recognition and navigation. A clean
 
 The practical question I take from both is whether a convenient representation has silently become a restriction on what can be represented at all. A tree with cross-links can be a perfectly useful interface. It need not be a complete ontology.
 
-## A notation can be a view policy
+## Notation, classification and visibility
 
-Suppose the current task is to understand the roasting process. Weighing, roasting, cooling, tasting, and packaging belong in that view. Gross contribution and moisture loss have different roles. A specialist process diagram is not defective because it abstracts away some of them.
+A roasting process and its cost model ask different questions about the same work. Plyra keeps their relationships in the project while sheet types and tags classify each context. Classification does not restrict node or relation types. Display filters dim unselected types in place; the data, paths and counts remain.
 
-The mistake would be to erase their relationships from the underlying record simply because this diagram has no convenient place for them.
-
-Plyra retains node and edge types in the graph. Small notation presets then determine which types are emphasized on a sheet. Excluded cards are dimmed, their names are struck through, and a counter reports exclusions. Switching back restores the free view without rebuilding the graph.
-
-These presets are intentionally narrow. They are not BPMN or UML validators, and their exclusion counts are not information-theoretic measures. They answer an operational question: how much of the current sheet does this particular preset leave outside its vocabulary?
-
-The coffee example has 42 nodes and 43 edges across seven sheets. Its roasting sheet contains eight nodes; the process preset excludes three. These are facts about a constructed example, not findings from a usability study.
+Version rc.4 includes shared typed attributes and basic draw.io, JSON Canvas and BPMN DI imports. These retain positions, sizes and basic shapes with conversion limits shown before import. They are not complete BPMN or UML implementations. All intra-sheet lines are solid, cross-sheet lines dashed; relation types and labels retain meaning where an original notation used line styling semantically.
 
 ## A bug that clarified the boundary
 
-The prototype offers a sheet, a configurable spread of two to six sheets, a contents view, a flat graph, and a tilted stack. In the spread, a reference card disappears when its destination is visible in another layer; an actual edge takes its place. Layout adapts to the proportions of the layer. The stack places selected sheets above one another, with node labels and controls for tilt, spacing and connections. Amber-bronze lines without arrows join appearances of one ID. Dashed arrows represent cross-sheet relations; thin solid arrows stay within a layer. On narrow screens, the spread shows one selected sheet. These are design choices to evaluate, not measured usability improvements.
+Sheets has two levels: single-sheet editing and Helicopter view of all sheets, connected by minus / plus controls. Drag headers to move whole sheets and nodes to move their appearance within a sheet. Spread separately compares two to six selected sheets. Contents gives a summary, All-to-1 shows one editable appearance per entity with its own saved positions, and Stack provides Rows / Nodes & edges, type/tag grouping and independent optimization. In the spread, a reference card disappears when its destination is visible in another layer; an actual edge takes its place. Layout adapts to the proportions of the layer. The stack places selected sheets above one another, with node labels and controls for tilt, spacing and connections. Amber-bronze lines without arrows join appearances of one ID. Dashed arrows represent cross-sheet relations; thin solid arrows stay within a layer. On narrow screens, the spread shows one selected sheet. These are design choices to evaluate, not measured usability improvements.
 
 While checking the spread, I found an edge case in the model. Imagine an entity on sheets A and C connected to an entity on B and C. Because the endpoints shared C, a global test classified their edge as internal. The spread could then hide the stubs without drawing the A–B connection.
 
@@ -100,8 +94,8 @@ I also do not present a crossing reduction as a speed improvement. Replacing cro
 
 A useful study would hold graph content constant, specify the layouts, counterbalance presentation order, and measure both time and correctness. It would include local lookup and questions that require moving between contexts. Navigation steps, missed references, and participant experience would belong in the results. Multiple graphs would be more convincing than a single carefully constructed demonstration.
 
-The flat view in this prototype uses a different layout from the individual sheets. A side-by-side screenshot therefore cannot isolate the effect of boundaries. The stack is another representation to evaluate, not an independent measurement instrument.
+All-to-1 in this prototype uses a different layout from the individual sheets. A side-by-side screenshot therefore cannot isolate the effect of boundaries. The stack is another representation to evaluate, not an independent measurement instrument.
 
-For now the deliverable is smaller: an inspectable implementation of shared identity across bounded views, with explicit rules for what is omitted and what survives export. The [repository]({{REPO_URL}}) contains the code, [demo]({{DEMO_URL}}), sample graphs, tests, and remaining QA work.
+For now the deliverable is smaller: an inspectable implementation of shared identity across bounded views, with explicit rules for what is omitted and what survives export. The [repository](https://github.com/Elpiti-Matt/Plyra) contains the code, [demo](https://Elpiti-Matt.github.io/Plyra/), sample graphs, tests, and remaining QA work.
 
 If this is useful, I expect the benefit to show up on a particular question: what else becomes relevant when this entity changes? Making the whole graph visible is one possible way to answer. It should not be the only one.

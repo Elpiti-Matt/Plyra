@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.qa/
+*.log
+.DS_Store
+
+.qa-test-output.txt
+__pycache__/
+*.pyc

@@ -1,5 +1,6 @@
 import { CARD_W, STUB_H, type Graph, type Pos } from "../model/types";
-import { buildIndex, nodeH, stubsForSheet, type Sizes, type Rect } from "./graph";
+import { buildIndex, stubsForSheet, type Sizes, type Rect } from "./graph";
+import { dimensions } from "./appearance";
 import { identityRoutes, sheetRoutes } from "./spreadGraph";
 import type { LayoutBox, LayoutLink, LayoutNode, LayoutRequest, LayoutResult } from "./optimizeLayout";
 
@@ -11,7 +12,7 @@ export const appearanceId=(sid:string,id:string)=>JSON.stringify([sid,id]);
 export function viewLayoutRequest(graph:Graph,sizes:Sizes,snapshot:LayoutSnapshot):LayoutRequest {
   const idx=buildIndex(graph),visible=snapshot.panes.map(p=>p.sid);
   const nodes:LayoutNode[]=snapshot.panes.flatMap(pane=>(snapshot.flat?graph.nodes:idx.bySheet.get(pane.sid)??[]).map(n=>({
-    id:appearanceId(pane.sid,n.id),group:pane.sid,...(pane.positions.get(n.id)??n.pos[pane.sid]??{x:0,y:0}),w:CARD_W,h:nodeH(sizes,n.id),
+    id:appearanceId(pane.sid,n.id),group:pane.sid,...(pane.positions.get(n.id)??n.pos[pane.sid]??{x:0,y:0}),...dimensions(n,pane.sid,sizes),
   })));
   const internal=snapshot.panes.flatMap(pane=>graph.edges.filter(e=>snapshot.flat||(idx.nodeById.get(e.from)?.sheets.includes(pane.sid)&&idx.nodeById.get(e.to)?.sheets.includes(pane.sid))).map(e=>({from:appearanceId(pane.sid,e.from),to:appearanceId(pane.sid,e.to)})));
   const links:LayoutLink[]=[...internal];
@@ -46,7 +47,7 @@ export function applyViewLayout(graph:Graph,snapshot:LayoutSnapshot,result:Layou
   if(!result.changed)return graph;
   if(snapshot.flat)return{...graph,flatPositions:Object.fromEntries(graph.nodes.map(n=>[n.id,result.positions.get(appearanceId("__flat",n.id))!]))};
   const visible=new Set(snapshot.panes.map(p=>p.sid));
-  return{...graph,sheets:graph.sheets.map(s=>visible.has(s.id)?{...s,layout:"manual"}:s),nodes:graph.nodes.map(n=>{
+  return{...graph,edges:graph.edges.map(e=>e.routes?{...e,routes:Object.fromEntries(Object.entries(e.routes).filter(([sid])=>!visible.has(sid)))}:e),sheets:graph.sheets.map(s=>visible.has(s.id)?{...s,layout:"manual"}:s),nodes:graph.nodes.map(n=>{
     const pos={...n.pos};let changed=false;
     for(const sid of n.sheets)if(visible.has(sid)){pos[sid]=result.positions.get(appearanceId(sid,n.id))!;changed=true;}
     return changed?{...n,pos}:n;

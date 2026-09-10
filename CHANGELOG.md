@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.7.0-rc.4 — 2026-09-09
+
+- Independent Select all / Turn off all actions for node and relation type filters, including custom types; unchecked objects remain dimmed in place.
+- Helicopter view can show connections of the selected sheet only. Gold identity links fan out directly to every other appearance; other sheets and local edges stay visible.
+- The two-level mode is named Sheets / Листы consistently. Bilingual FAQ, AI prompts, examples and instructional GIFs use v3 with all six attribute types. Added `npm run ai:docs` and consistency checks.
+- Illustrated feature guides, SVG diagrams, current handoff and beginner GitHub Desktop instructions. Compared the package with Elpiti-Matt/Plyra main at 581b3b1; configured repository links.
+- 98 model/DOM tests, TypeScript and production build. Browser visual QA was blocked; no commit, push, PR, release or deployment performed.
+
+## 0.7.0-rc.3 — 2026-09-09
+
+Documentation bundle docs.1: refreshed publishing/manual QA/design guides and editorial feature descriptions, added an existing-repository update guide and file comparison report, corrected the Issues template folder, removed two empty placeholder files. Application source, dependencies and standalone HTML remain unchanged from rc.3.
+
+- Canvas has two levels: single-sheet editing and a free Helicopter view of all sheets, linked by upper-right minus / plus controls. Spread remains a separate comparison workspace.
+- Drag whole sheets by their headers; drag nodes within a sheet. Independent native sheet positions, scale-aware gestures, undo/redo, keyboard movement, pan and touch pinch; cancelled gestures do not commit partial moves.
+- All nodes becomes All-to-1, with one editable appearance per entity, shared text/attributes and a separate saved layout. Original memberships and the line grammar remain intact.
+- Updated bilingual help and current handoff. Validation and remaining manual checks are recorded in `docs/VALIDATION.json`.
+
+## 0.7.0-rc.2 — 2026-09-09
+
+Sheet tag/type dictionaries and one type plus multiple tags per sheet; unrestricted node/relation types; notation shapes without glyphs; typed shared node attributes; uniform intra/inter-sheet line grammar; filters dim in place; draw.io geometry, JSON Canvas and BPMN DI imports; all-node stack with Rows / Nodes & edges, grouping and independent layout optimization. See `HANDOFF.md` and `docs/VALIDATION.json` for current state and limitations.
+
+## 0.7.0-rc.1 — 2026-09-08
+
+- Reorganized Project, Types, Display and Help commands; separate view and creation controls.
+- Added empty projects, sheet creation and a relation form spanning all sheets.
+- Added portable node, relation and sheet-type dictionaries with custom definitions and native `.plyra` v3 serialization. Legacy v1/v2 JSON remains readable.
+- Added separate draw.io import/export: multi-page XML and raw-deflate pages, preview, atomic append, namespaced IDs and explicit conversion limits.
+- Replaced the automatic mobile Contents list with a portrait sheet graph, shared-identity lines, focus control and a manual Diagram/List switch.
+- Explained visibility filters, reference cards and identity lines. Preserved shared node editing and undo.
+- Replaced the depot scenario with a synthetic software example in RU and EN.
+- 71 model/DOM tests pass. TypeScript and production build pass. Visual browser and physical-phone checks remain pending; local HTML navigation was blocked by browser policy.
+- Added `START-HERE.ru.md` and a draw.io import example for GitHub updates and manual checks.
+
 ## Unreleased — 2026-09-06
 
 - Added the Vite core MIT notice for the modulepreload polyfill included in the standalone HTML.

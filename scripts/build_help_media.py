@@ -84,10 +84,10 @@ def sheet(d,box,name,active=False):
 
 def spread(locale,i):
     en=locale=='en';title='Reading the lines' if en else 'Как читать линии'
-    captions=['Gold, no arrow: appearances of the same entity. One ID, one body.','Dashed arrow: a relationship to an entity on another sheet.','Thin solid arrow: a relationship inside one layer.','Hide side references to leave clean layers. The graph stays intact.'] if en else ['Золото без стрелки — появления одной сущности. Один ID, общее тело.','Пунктирная стрелка — связь с сущностью другого листа.','Тонкая сплошная стрелка — связь внутри одного слоя.','Скрываем боковые переходы. Чистые слои; данные карты сохраняются.']
+    captions=['Gold, no arrow: appearances of the same entity. One ID, shared text and attributes.','Dashed arrow: a relationship to an entity on another sheet.','Thin solid arrow: a relationship inside one sheet.','Hide side references to leave clean sheets. The graph stays intact.'] if en else ['Золото без стрелки — появления одной сущности. Один ID, общие текст и атрибуты.','Пунктирная стрелка — связь с сущностью другого листа.','Тонкая сплошная стрелка — связь внутри одного листа.','Скрываем боковые переходы. Чистые листы; данные карты сохраняются.']
     im,d=base(locale,i,title,captions[i]);show=i<3
-    sheet(d,[23,138,448,437],'Layer: Product' if en else 'Слой: Продукт',i%2==0)
-    sheet(d,[449,138,935,437],'Layer: Money' if en else 'Слой: Деньги',i%2==1)
+    sheet(d,[23,138,448,437],'Sheet: Product' if en else 'Лист: Продукт',i%2==0)
+    sheet(d,[449,138,935,437],'Sheet: Money' if en else 'Лист: Деньги',i%2==1)
     rr(d,[681,99,934,130],fill='#f0e8f8' if show else '#fff',outline='#bfa9cf',r=5)
     txt(d,(692,108),('Side references: ON' if show else 'Side references: OFF') if en else ('Боковые переходы: ВКЛ' if show else 'Переходы скрыты'),12,PURPLE)
     nm='Morning blend' if en else 'Смесь «Утро»'
@@ -107,9 +107,9 @@ def spread(locale,i):
 
 def editing(locale,i):
     en=locale=='en';nm='Morning blend' if en else 'Смесь «Утро»'
-    captions=['Press + to open the node editor.','Name and body are editable inside the card.','Edit one appearance: the same body updates on the other layer.','Collapse with −. Undo can restore the previous content.'] if en else ['Нажмите «+», чтобы раскрыть редактор ноды.','Название и тело редактируются прямо в карточке.','Правка одного появления обновляет общее тело на другом слое.','Сверните карточку через «−». Правку можно отменить.']
-    im,d=base(locale,i,'One node, two appearances' if en else 'Одна нода, два появления',captions[i])
-    sheet(d,[24,110,466,440],'Layer: Product' if en else 'Слой: Продукт',True);sheet(d,[468,110,936,440],'Layer: Money' if en else 'Слой: Деньги')
+    captions=['Press + to open the node editor.','Name and body are editable inside the card.','Edit one appearance: the same body updates on the other sheet.','Collapse with −. Undo can restore the previous content.'] if en else ['Нажмите «+», чтобы раскрыть редактор узла.','Название и тело редактируются прямо в карточке.','Правка одного появления обновляет общее тело на другом листе.','Сверните карточку через «−». Правку можно отменить.']
+    im,d=base(locale,i,'One node, two appearances' if en else 'Один узел, два появления',captions[i])
+    sheet(d,[24,110,466,440],'Sheet: Product' if en else 'Лист: Продукт',True);sheet(d,[468,110,936,440],'Sheet: Money' if en else 'Лист: Деньги')
     expanded=i in [1,2];body=('Recipe confirmed' if en else 'Рецепт подтверждён') if i>=2 else ('Draft recipe' if en else 'Черновик рецепта')
     path(d,(356,201),(569,201),gold=True,arrow=False)
     node(d,101,164,nm,body,w=255,expanded=expanded,selected=True)
@@ -118,30 +118,30 @@ def editing(locale,i):
         d.ellipse([317,165,357,205],outline=GOLD,width=3)
     if i==2:
         for x in [112,580]:rr(d,[x,309,x+233,355],fill=None,outline=GOLD,width=2,r=4)
-    txt(d,(480,416),'1 ID / 2 layers' if en else '1 ID / 2 слоя',12,GOLD,True,anchor='mm')
+    txt(d,(480,416),'1 ID / 2 sheets' if en else '1 ID / 2 листа',12,GOLD,True,anchor='mm')
     return im
 
 def ai(locale,i):
-    en=locale=='en';captions=['Copy the Plyra v2 standard. Add your question and source materials.','Ask your AI for JSON. Review facts, sources and unknowns.','Save as .json and import it. Invalid references are rejected.','Read the sheets. Review their boundaries and export a backup.'] if en else ['Скопируйте стандарт Plyra v2. Добавьте вопрос и исходные материалы.','Попросите ИИ вернуть JSON. Проверьте факты, источники и неизвестное.','Сохраните .json и загрузите. Некорректные ссылки отклоняются.','Прочитайте листы, проверьте границы и сохраните резервную копию.']
+    en=locale=='en';captions=['Copy the Plyra v3 standard. Add your question and source materials.','AI returns v3 JSON. Definitions and values belong in separate fields.','Save as .json and import it. Invalid references are rejected.','Read the sheets. Review their boundaries and export a backup.'] if en else ['Скопируйте стандарт Plyra v3. Добавьте вопрос и исходные материалы.','ИИ возвращает JSON v3. Определения и значения атрибутов — в разных полях.','Сохраните .json и загрузите. Некорректные ссылки отклоняются.','Прочитайте листы, проверьте границы и сохраните резервную копию.']
     im,d=base(locale,i,'From source material to Plyra' if en else 'Из материалов — в Plyra',captions[i])
     labels=['Standard','AI + sources','Import JSON','Read sheets'] if en else ['Стандарт','ИИ + источники','Импорт JSON','Чтение листов']
     for j,label in enumerate(labels):
         x=24+j*234;rr(d,[x,109,x+218,152],fill='#553765' if i==j else '#ffffff',outline='#d9cde3',r=7);txt(d,(x+109,130),f'{j+1}. {label}',13,'#fff' if i==j else MUTED,True,anchor='mm')
     if i==0:
-        rr(d,[79,183,881,427],fill='#fff');txt(d,(104,201),'Plyra v2 / '+('GENERATION CONTRACT' if en else 'СТАНДАРТ ГЕНЕРАЦИИ'),12,PURPLE,True)
-        text=['One entity = one node ID','sheets + nodes + edges','Include source locations in body','Keep facts and hypotheses separate'] if en else ['Одна сущность = один ID узла','sheets + nodes + edges','Источники указываются в теле','Факты и гипотезы — отдельно']
+        rr(d,[79,183,881,427],fill='#fff');txt(d,(104,201),'Plyra v3 / '+('GENERATION CONTRACT' if en else 'СТАНДАРТ ГЕНЕРАЦИИ'),12,PURPLE,True)
+        text=['One entity = one node ID','types + sheets + nodes + edges','Attribute definitions + typed values','Keep facts and hypotheses separate'] if en else ['Одна сущность = один ID узла','types + sheets + nodes + edges','Определения атрибутов + значения','Факты и гипотезы — отдельно']
         for j,s in enumerate(text):txt(d,(107,235+j*27),s,15,INK)
         rr(d,[104,364,429,405],fill='#553765',outline='#553765',r=7);txt(d,(267,385),'Copy AI standard' if en else 'Скопировать стандарт для ИИ',14,'#fff',True,anchor='mm')
     elif i==1:
         rr(d,[90,182,870,431],fill='#fff');txt(d,(113,196),'map.json',13,GOLD,True)
-        code=['{','  "version": 2,','  "title": "My map",','  "sheets": [{"id":"product"},{"id":"money"}],','  "nodes": [{"id":"blend","name":"Morning blend",','             "sheets":["product","money"],','             "kind":"entity","body":""}],','  "edges": []','}']
+        code=['{','  "version": 3,','  "types": {"attributes": [','    {"id":"cost","label":"Cost","dataType":"number"}]},','  "sheets": [{"id":"product"}],','  "nodes": [{"id":"blend","sheets":["product"],','             "attributes":{"cost":null}}],','  "edges": []','}']
         for j,s in enumerate(code):txt(d,(115,224+j*23),s,14,INK,mono=True)
     elif i==2:
         rr(d,[130,196,830,408],fill='#fff');txt(d,(480,230),'map.json',26,INK,True,anchor='mm')
         txt(d,(480,279),'✓ JSON  ·  ✓ IDs  ·  ✓ endpoints',16,'#648975',True,anchor='mm')
         rr(d,[338,323,622,377],fill='#553765',outline='#553765',r=8);txt(d,(480,349),'Import a file' if en else 'Загрузить файл',17,'#fff',True,anchor='mm')
     else:
-        sheet(d,[53,189,480,421],'Layer: Product' if en else 'Слой: Продукт',True);sheet(d,[482,189,908,421],'Layer: Money' if en else 'Слой: Деньги')
+        sheet(d,[53,189,480,421],'Sheet: Product' if en else 'Лист: Продукт',True);sheet(d,[482,189,908,421],'Sheet: Money' if en else 'Лист: Деньги')
         path(d,(366,295),(584,295),gold=True,arrow=False)
         node(d,153,253,'Morning blend' if en else 'Смесь «Утро»','id: blend',selected=True)
         node(d,584,253,'Morning blend' if en else 'Смесь «Утро»','id: blend',selected=True)

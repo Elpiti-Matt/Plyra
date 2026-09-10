@@ -1,12 +1,16 @@
+import { useTypes } from "../lib/TypeContext";
 import { useI18n } from "../lib/i18n";
 import { useState } from "react";
-import { EDGE_BY_ID, EDGE_KINDS, KINDS, KIND_BY_ID, type EdgeKind, type GEdge, type GNode, type Graph, type NodeKind, type Sheet } from "../model/types";
+import { type EdgeKind, type GEdge, type GNode, type Graph, type NodeKind, type Sheet } from "../model/types";
 import { edgesBetweenSheets, type Index, type LintItem } from "../lib/graph";
 import { Body } from "../lib/Body";
 import { cn } from "../utils/cn";
-import { NOTATIONS, notationFor, notationLoss } from "../lib/notation";
+import { sheetTypeId } from "../lib/typeRegistry";
+import { NodeAttributes } from "./NodeAttributes";
+import { TagChoices, notationLabel } from "./TypeManager";
 
 export interface Actions {
+  manageAttributes:()=>void;
   updateNode: (id: string, patch: Partial<GNode>) => void;
   addMembership: (id: string, sheetId: string) => void;
   removeMembership: (id: string, sheetId: string) => void;
@@ -25,6 +29,7 @@ const lbl = "mb-0.5 mt-2.5 block text-[12px] font-semibold text-slate-500";
 
 export function NodePanel({ node, graph, idx, a, stackIds, mode }: { node: GNode; graph: Graph; idx: Index; a: Actions; stackIds: string[]; mode: string }) {
   const {t,name:displayName}=useI18n();
+  const {nodeTypes,nodeType,label}=useTypes();
 
   const edges = idx.adj.get(node.id) ?? [];
   const groups = new Map<string, { e: GEdge; other: GNode; incoming: boolean }[]>();
@@ -39,16 +44,16 @@ export function NodePanel({ node, graph, idx, a, stackIds, mode }: { node: GNode
   return (
     <div className="p-3 text-[12px]">
       <div className="flex items-center gap-2">
-        <span className="text-slate-400">{KIND_BY_ID[node.kind].glyph}</span>
-        <span className="text-[10px] uppercase tracking-wide text-slate-500">{t(KIND_BY_ID[node.kind].label)}</span>
+
+        <span className="text-[10px] uppercase tracking-wide text-slate-500">{label(nodeType(node.kind))}</span>
       </div>
       <label htmlFor="node-name" className={lbl}>{t("Имя")}</label>
       <input id="node-name" maxLength={200} className={inp} value={displayName(node.name)} onChange={(e) => a.updateNode(node.id, { name: e.target.value })} />
       <label htmlFor="node-kind" className={lbl}>{t("Тип")}</label>
       <select id="node-kind" className={inp} value={node.kind} onChange={(e) => a.updateNode(node.id, { kind: e.target.value as NodeKind })}>
-        {KINDS.map((k) => (
+        {nodeTypes.map((k) => (
           <option key={k.id} value={k.id}>
-            {k.glyph} {t(k.label)}
+            {label(k)}
           </option>
         ))}
       </select>
@@ -104,6 +109,7 @@ export function NodePanel({ node, graph, idx, a, stackIds, mode }: { node: GNode
         </div>
       )}
 
+      <NodeAttributes key={node.id} node={node} onEdit={patch=>a.updateNode(node.id,patch)} onManage={a.manageAttributes}/>
       <div className="mt-3 flex items-center justify-between">
         <label className={cn(lbl, "mt-0")}>{t("Связанные узлы: ")}{edges.length}</label>
         <button onClick={a.startLink} className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] text-white hover:bg-emerald-700">{t("+ связать с… ")}</button>
@@ -132,15 +138,16 @@ export function NodePanel({ node, graph, idx, a, stackIds, mode }: { node: GNode
 
 function EdgeRow({ e, other, incoming, dim, a, sheetId }: { e: GEdge; other: GNode; incoming: boolean; dim: boolean; a: Actions; sheetId: string }) {
   const {t,name:displayName}=useI18n();
+  const {edgeTypes,edgeType,label}=useTypes();
 
   const [open, setOpen] = useState(false);
-  const ek = EDGE_BY_ID[e.kind ?? "flow"];
+  const ek = edgeType(e.kind);
   return (
     <div className={cn("mt-1 rounded border border-slate-200 bg-white", dim && "opacity-60")}>
       <div className="flex items-center gap-1 px-1.5 py-1">
-        <span className="w-[68px] shrink-0 truncate text-[10px]" style={{ color: ek.color }} title={t(ek.label)}>
+        <span className="w-[68px] shrink-0 truncate text-[10px]" style={{ color: ek.color }} title={label(ek)}>
           {incoming ? "← " : ""}
-          {t(ek.label)}
+          {label(ek)}
         </span>
         <button className="min-w-0 flex-1 truncate text-left font-medium hover:underline" onClick={() => a.goNode(other.id, sheetId)} title={displayName(other.name)}>
           {displayName(other.name)}
@@ -152,9 +159,9 @@ function EdgeRow({ e, other, incoming, dim, a, sheetId }: { e: GEdge; other: GNo
       {open && (
         <div className="flex items-center gap-1 border-t border-slate-100 px-1.5 py-1">
           <select aria-label={t("Тип связи")} className={cn(inp, "w-auto")} value={e.kind ?? "flow"} onChange={(ev) => a.updateEdge(e.id, { kind: ev.target.value as EdgeKind })}>
-            {EDGE_KINDS.map((k) => (
+            {edgeTypes.map((k) => (
               <option key={k.id} value={k.id}>
-                {t(k.label)}
+                {label(k)}
               </option>
             ))}
           </select>
@@ -170,21 +177,22 @@ function EdgeRow({ e, other, incoming, dim, a, sheetId }: { e: GEdge; other: GNo
 
 export function SheetPanel({ sheet, graph, idx, a }: { sheet: Sheet; graph: Graph; idx: Index; a: Actions }) {
   const {t,name:displayName}=useI18n();
+  const {sheetTypes,registry,label}=useTypes();
 
   const list = idx.bySheet.get(sheet.id) ?? [];
   const shared = list.filter((n) => n.sheets.length > 1).length;
   const lim = sheet.limit ?? 15;
-  const loss = notationLoss(graph, sheet);
   const others = graph.sheets.filter((s) => s.id !== sheet.id).map((s) => ({ s, c: edgesBetweenSheets(graph, idx, sheet.id, s.id).length, common: list.filter((n) => n.sheets.includes(s.id)).length }));
   return (
     <div className="p-3 text-[12px]">
       <label htmlFor="sheet-name" className={lbl}>{t("Название")}</label>
       <input id="sheet-name" maxLength={80} className={inp} value={displayName(sheet.name)} onChange={(e) => a.updateSheet(sheet.id, { name: e.target.value })} />
-      <label htmlFor="sheet-notation" className={lbl}>{t("Нотация")}</label>
-      <select id="sheet-notation" className={inp} value={notationFor(sheet).id} onChange={(e) => a.updateSheet(sheet.id, { notation: e.target.value })}>
-        {NOTATIONS.map((n) => <option key={n.id} value={n.id}>{t(n.id)}</option>)}
+      <label htmlFor="sheet-notation" className={lbl}>{t("Тип листа","Sheet type")}</label>
+      <select id="sheet-notation" className={inp} value={sheetTypeId(sheet,registry)} onChange={(e) => a.updateSheet(sheet.id, { typeId: e.target.value })}>
+        {sheetTypes.map((n) => <option key={n.id} value={n.id}>{label(n)}</option>)}
       </select>
-      <p className="mt-1 text-[10.5px] text-slate-500">{t("Вид приглушает неподходящие типы. Граф сохраняется. Это учебные фильтры, а не проверка BPMN или UML.")}</p>
+      <fieldset className="sheet-tag-field"><legend>{t("Теги листа","Sheet tags")}</legend><TagChoices tags={registry.tags} value={sheet.tags??[]} onChange={tags=>a.updateSheet(sheet.id,{tags})}/></fieldset>
+      <p className="field-help">{t("Нотация","Notation")}: {notationLabel(sheet.notation)}</p>
       <div className="flex gap-2">
         <div className="flex-1">
           <label htmlFor="sheet-limit" className={lbl}>{t("Лимит узлов")}</label>
@@ -206,7 +214,6 @@ export function SheetPanel({ sheet, graph, idx, a }: { sheet: Sheet; graph: Grap
         {list.length} / {lim}{t(" узлов · общих с другими листами: ")}{shared}
       </div>
 
-      <p className="mt-3 text-sm" role="status">{t("Вне нотации: ")}{loss.nodes}{t(" из ")}{loss.totalNodes}{t(" узлов; ")}{loss.edges}{t(" из ")}{loss.totalEdges}{t(" связей, касающихся листа.")}</p>
       <label className={lbl}>{t("Узлы этого листа")}</label>
       <ul className="reader-list">{list.map((n) => <li key={n.id}><button onClick={() => a.goNode(n.id, sheet.id)}>{displayName(n.name)}</button></li>)}</ul>
       <label className={lbl}>{t("Связи с другими листами")}</label>

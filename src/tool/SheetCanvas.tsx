@@ -1,9 +1,10 @@
+import { useTypes } from "../lib/TypeContext";
 import { useI18n } from "../lib/i18n";
 import { LINE_STYLE } from "../lib/lineStyles";
 import { useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
-import { CARD_W, EDGE_BY_ID, EDGE_KINDS, STUB_H, type GEdge, type GNode, type NodeKind, type View, type Sheet } from "../model/types";
-import { allowsNode, allowsEdge } from "../lib/notation";
-import { clamp, edgePath, nodeH, type Sizes, type Stub } from "../lib/graph";
+import { CARD_W, STUB_H, type GEdge, type GNode, type NodeKind, type View, type Sheet } from "../model/types";
+import { dimensions, routedPath, appearanceForType } from "../lib/appearance";
+import { clamp, edgePath, type Sizes, type Stub } from "../lib/graph";
 import { NodeCard } from "./NodeCard";
 
 export interface Placed {
@@ -30,6 +31,8 @@ interface Props {
   hybrid: boolean;
   showBody: boolean;
   kindFilter: Set<NodeKind>;
+  dimmedEdgeTypes?:Set<string>;
+  onManageAttributes?:()=>void;
   colorOf: (n: GNode) => string;
   sheetName: (id: string) => string;
   extraOf?: (n: GNode) => number;
@@ -47,6 +50,7 @@ interface Props {
 
 export function SheetCanvas(p: Props) {
   const {t,name:displayName}=useI18n();
+  const {nodeType,edgeType,label}=useTypes();
 
   const ref = useRef<HTMLDivElement>(null);
   const viewRef = useRef(p.view);
@@ -61,7 +65,7 @@ export function SheetCanvas(p: Props) {
       ch = el.clientHeight;
     if (cw < 40 || ch < 40) return;
     const rects = [
-      ...p.placed.map((q) => ({ x: q.x, y: q.y, w: CARD_W, h: nodeH(p.sizes, q.node.id) })),
+      ...p.placed.map((q) => ({ x: q.x, y: q.y, ...dimensions(q.node,p.id,p.sizes) })),
       ...p.stubs.map((s) => ({ x: s.x, y: s.y, w: CARD_W, h: STUB_H })),
     ];
     if (rects.length === 0) {
@@ -222,34 +226,35 @@ export function SheetCanvas(p: Props) {
 
   // ---- геометрия для рёбер ----
   const rectOf = new Map<string, { x: number; y: number; w: number; h: number }>();
-  for (const q of p.placed) rectOf.set(q.node.id, { x: q.x, y: q.y, w: CARD_W, h: nodeH(p.sizes, q.node.id) });
+  for (const q of p.placed) rectOf.set(q.node.id, { x: q.x, y: q.y, ...dimensions(q.node,p.id,p.sizes) });
   const stubRect = new Map<string, { x: number; y: number; w: number; h: number }>();
   for (const s of p.stubs) stubRect.set(s.key, { x: s.x, y: s.y, w: CARD_W, h: STUB_H });
 
-  const isDim = (n: GNode) => !p.kindFilter.has(n.kind) || !allowsNode(p.sheet, n);
+  const isDim = (n: GNode) => !p.kindFilter.has(n.kind);
   const sel = p.selected;
   const { view } = p;
   const localLeft = p.placed.length ? Math.min(...p.placed.map((q) => q.x)) : 0;
-  const localRight = p.placed.length ? Math.max(...p.placed.map((q) => q.x + CARD_W)) : CARD_W;
+  const localRight = p.placed.length ? Math.max(...p.placed.map((q) => q.x + dimensions(q.node,p.id,p.sizes).w)) : CARD_W;
   const allY = [...p.placed.map((q) => q.y), ...p.stubs.map((s) => s.y)];
   const borderTop = Math.min(0,...allY)-68;
-  const borderBottom = Math.max(0,...p.placed.map((q) => q.y+nodeH(p.sizes,q.node.id)),...p.stubs.map((s) => s.y+STUB_H))+40;
+  const borderBottom = Math.max(0,...p.placed.map((q) => q.y+dimensions(q.node,p.id,p.sizes).h),...p.stubs.map((s) => s.y+STUB_H))+40;
   const sides = (["left","right"] as const).filter((side) => p.stubs.some((s) => s.side===side));
 
   const edgeEl = (e: GEdge, a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }, ghost = false) => {
-    const ek = EDGE_BY_ID[e.kind ?? "flow"];
-    const { d, mid } = edgePath(a, b);
+    const ek = edgeType(e.kind);
+    const { d, mid } = (!ghost?routedPath(e,p.id,a,b):undefined)??edgePath(a, b);
     const hi = sel && (e.from === sel || e.to === sel);
     const fromN = p.placed.find((q) => q.node.id === e.from)?.node;
     const toN = p.placed.find((q) => q.node.id === e.to)?.node;
-    const dim = !allowsEdge(p.sheet, e.kind) || (fromN && isDim(fromN)) || (toN && isDim(toN));
+    if(p.id==="__flat"&&fromN&&toN)ghost=!fromN.sheets.some(sid=>toN.sheets.includes(sid));
+    const dim = p.dimmedEdgeTypes?.has(e.kind??"flow") || (fromN && isDim(fromN)) || (toN && isDim(toN));
     const op = dim ? 0.12 : hi ? 1 : sel ? 0.22 : ghost ? 0.55 : 0.85;
     return (
-      <g key={e.id} opacity={op} data-line-kind={ghost?"external":"local"}>
-        <path d={d} fill="none" stroke={ghost?LINE_STYLE.external.color:ek.color} strokeWidth={hi ? 1.7 : ghost?LINE_STYLE.external.width:LINE_STYLE.local.width} strokeDasharray={ghost?LINE_STYLE.external.dash:undefined} markerEnd={`url(#arr-${p.id}-${ek.id})`} vectorEffect="non-scaling-stroke" />
-        {e.label && (
+      <g key={e.id} opacity={op} data-edge-id={e.id} data-line-kind={ghost?"external":"local"}>
+        <path d={d} fill="none" stroke={ghost?LINE_STYLE.external.color:LINE_STYLE.local.color} strokeWidth={hi ? 1.7 : ghost?LINE_STYLE.external.width:LINE_STYLE.local.width} strokeDasharray={ghost?LINE_STYLE.external.dash:undefined} markerEnd={e.directed!==false?`url(#arr-${p.id}-${ghost?"external":"local"})`:undefined} vectorEffect="non-scaling-stroke" />
+        {(e.label||hi||e.sourceType) && (
           <text x={mid.x} y={mid.y} fontSize={10} textAnchor="middle" dominantBaseline="middle" fill="#334155" paintOrder="stroke" stroke="#f8fafc" strokeWidth={3} style={{ fontWeight: 500 }}>
-            {t(e.label)}
+            {e.sourceType?.startsWith("bpmn:")?label(ek)+(e.label?" · "+t(e.label):""):e.label?t(e.label):label(ek)}
           </text>
         )}
       </g>
@@ -273,9 +278,9 @@ export function SheetCanvas(p: Props) {
       <svg className="absolute inset-0 h-full w-full pointer-events-none" aria-hidden>
         <defs>
           {sides.map((side) => <linearGradient key={side} id={`outside-${p.id}-${side}`} x1={side==="right"?"0":"1"} y1="0" x2={side==="right"?"1":"0"} y2="0"><stop stopColor="#e5eaf4" stopOpacity=".9"/><stop offset="1" stopColor="#f8fafc" stopOpacity="0"/></linearGradient>)}
-          {EDGE_KINDS.map((k) => (
-            <marker key={k.id} id={`arr-${p.id}-${k.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0 0 L10 5 L0 10 z" fill={k.color} />
+          {(["local","external"] as const).map((kind) => (
+            <marker key={kind} id={`arr-${p.id}-${kind}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill={LINE_STYLE[kind].color} />
             </marker>
           ))}
         </defs>
@@ -318,11 +323,12 @@ export function SheetCanvas(p: Props) {
             showBody={p.showBody}
             selected={sel === q.node.id}
             dimmed={isDim(q.node)}
-            excluded={!allowsNode(p.sheet, q.node)}
+            appearance={q.node.appearance?.[p.id]??(nodeType(q.node.kind).shape?{...appearanceForType(nodeType(q.node.kind))!,width:208,height:64}:undefined)}
+            onManageAttributes={p.onManageAttributes}
             onActivate={() => p.onSelect(q.node.id)}
             linkTarget={p.linking && sel !== q.node.id}
             extraSheets={p.extraOf ? p.extraOf(q.node) : 0}
-            style={{ left: q.x, top: q.y }}
+            style={{ left: q.x, top: q.y, zIndex:q.node.appearance?.[p.id]?.shape==="group"?0:1 }}
             measureRef={(el) => p.observe(el, JSON.stringify([p.id,q.node.id]))}
             onPointerDown={onCardDown(q)}
             expanded={!p.readOnly&&p.expanded?.has(q.node.id)}
@@ -331,7 +337,7 @@ export function SheetCanvas(p: Props) {
           />
         ))}
       </div>
-      {p.header && <div className="pointer-events-none absolute left-3 top-3 z-10">{p.header}</div>}
+      {p.header && <div className="canvas-caption pointer-events-none absolute left-3 top-3 z-10">{p.header}</div>}
       {!!p.stubs.length && <div className="sheet-boundary-legend" aria-hidden="true"><i/>{t("За пунктиром — ссылки на другие листы")}</div>}
     </div>
   );

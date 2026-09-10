@@ -1,72 +1,78 @@
 {
-  "date": "2026-09-05",
-  "version": "0.6.1-rc.1",
+  "date": "2026-09-09",
+  "version": "0.7.0-rc.4",
+  "base": "Current conversation Plyra source snapshot; remote main inspected, not used to overwrite the working snapshot",
   "typecheck": "passed",
   "production_build": "passed",
   "release_javascript_syntax": "passed",
   "automated_tests": {
-    "passed": 55,
+    "passed": 98,
     "failed": 0,
     "engine": "node:test + jsdom; no layout engine",
-    "last_run": "2026-09-05"
+    "local_node_version": "v24.19.0"
   },
   "external_asset_references_in_html": 0,
-  "release_bytes": 1328298,
-  "release_sha256": "a9533e01e2b1f95c7e7182e0c74d11a6fb473dbe901e8a0b57e68d4e5ae8e01f",
-  "github_counter": "fixture aggregation passed; no public repo or live counts yet",
-  "browser_visual_qa": "not run; sites-previewd mailbox unavailable, no alternate browser route used",
+  "csp_headers": 1,
+  "release_bytes": 1482290,
+  "release_sha256": "a083cb145297dc90ff2e167610bc76d74fb3bca60f96ad3b803856d985469e41",
+  "standalone_equals_archive_demo": true,
+  "browser_visual_qa": "blocked: cloud browser URL policy rejected local HTML navigation; no workaround attempted",
   "physical_mobile_qa": "not run",
-  "obsidian_integration": "not run",
-  "published": false,
-  "redesign": "active layer frame; solid local/dashed external/gold identity; local external-card toggle; line legend; illustrated PNG/GIF help; cross-notation design scenario",
-  "help_media": {
-    "topics": 3,
-    "languages": [
-      "ru",
-      "en"
-    ],
-    "png_files": 6,
-    "gif_files": 6,
-    "frames_per_gif": 4,
-    "duration_seconds": 8.8,
-    "type": "original instructional UI illustrations, not browser screenshots",
-    "asset_visual_inspection": "performed"
+  "external_editor_manual_qa": "not run",
+  "publishing": "No commit, push, PR, release or deployment performed. Existing public GitHub state inspected read-only.",
+  "coverage": [
+    "Sheets two-level navigation, retained overview camera, empty sheet entry and separate Spread",
+    "Header drags save independent sheet positions with single-step undo/redo and fixed neighbours",
+    "Node drags account for both camera scales, clamp within a sheet and preserve other appearances and memberships",
+    "Pointer cancellation, lost capture, Escape and pinch discard pending graph edits",
+    "Overview filter dimming, keyboard movement and native round trip of sheet positions",
+    "All-to-1 shared inline editing and independent source-sheet positions",
+    "Sheet tag/type catalog and new sheets",
+    "Attributes: data types, shared edits, undo/redo, native and draw.io round trips",
+    "draw.io geometry, nested groups, compressed XML, shared identities and waypoint preservation",
+    "JSON Canvas types, geometry, side connections and atomic rejection",
+    "BPMN DI shapes, semantic types, waypoints, missing DI and unsafe XML rejection",
+    "Solid local lines, dashed cross-sheet relations, gold identity and dim-in-place filters",
+    "Stack beyond 10 nodes, both modes, grouping and view-only optimization",
+    "Splitting imported sheets preserves valid appearance and route references",
+    "Existing views, saved data recovery, imports, mobile DOM controls and layout undo/redo",
+    "Independent bulk node and relation filters include custom types and preserve graph, geometry and history",
+    "Selected-sheet overview retains all sheets and local edges, filters unrelated cross-sheet routes, follows header selection and preserves relation direction",
+    "Focused gold identity routes connect directly to every other appearance, including three or more sheets",
+    "AI v3 examples load all six attribute types; downloaded prompts/examples exactly match application source"
+  ],
+  "documentation": {
+    "version": "0.7.0-rc.4",
+    "markdown_files_checked": 32,
+    "relative_links_checked": 97,
+    "broken_local_links": 0,
+    "workflow_and_issue_form_yaml": "passed",
+    "ai_prompt_version": 3,
+    "ai_artifacts_match_application": true,
+    "images": {
+      "svg_diagrams": 4,
+      "gif_png_pairs": 6,
+      "gif_frames_each": 4,
+      "gif_frame_ms": 2200,
+      "provenance": "Original instructional diagrams generated from project scripts, not screenshots",
+      "visual_inspection": "Rendered SVG diagrams in both languages and revised AI GIF keyframes inspected; overview caption overlap corrected"
+    },
+    "repo_links": "Configured for Elpiti-Matt/Plyra"
   },
-  "cross_notation": {
-    "nodes": 13,
-    "edges": 16,
-    "sheets": 6,
-    "status": "design illustration plus native Atlas v2 traceability datasets; no native notation editor"
-  },
-  "layout": {
-    "views": [
-      "sheet",
-      "spread",
-      "flat"
-    ],
-    "algorithm": "deterministic grids and adjacency bands, greedy pair swaps, sampled cubic geometry",
-    "edge_evaluation_limit": 400,
-    "preserves": "identities, memberships, bodies and edges",
-    "undo_redo": "one atomic graph action",
-    "cancellation": "no intermediate writes",
-    "mobile": "DOM test: one visible spread layer only; physical device checks not run",
-    "reproducible_geometry_report": "docs/LAYOUT-METRICS.json"
-  },
-  "product_name": "Plyra",
-  "rebrand": {
-    "interface": "Plyra in RU and ENG",
-    "materials": "AI contract, FAQ, PNG/GIF illustrations, downloads, docs and article drafts",
-    "compatibility": "original browser storage keys, native graph v2 and Canvas metadata retained",
-    "old_visible_brand_strings_in_release_script": 0
-  },
-  "license_notice_rebuild": {
-    "date": "2026-09-06",
-    "typecheck": "passed",
-    "production_build": "passed",
-    "bundled_javascript_and_css": "identical to previous deliverable",
-    "vite_core_mit_notice": "included",
-    "project_license": "MIT; Apache-2.0 proposed, not applied",
-    "external_asset_references": 0,
-    "functional_tests": "not rerun; no application code changed"
+  "remote_repository": {
+    "url": "https://github.com/Elpiti-Matt/Plyra",
+    "branch": "main",
+    "head": "581b3b1fe938c5e274bc1d5904f74d963e4d3e7f",
+    "tracked_files": 111,
+    "package_version": "0.6.1-rc.1",
+    "checks_for_head": "success",
+    "checks_run": "https://github.com/Elpiti-Matt/Plyra/actions/runs/34042642546",
+    "existing_pages_workflow_run": "https://github.com/Elpiti-Matt/Plyra/actions/runs/34041730829",
+    "existing_pages_workflow_conclusion": "success",
+    "public_site_status": 200,
+    "public_site_url": "https://elpiti-matt.github.io/Plyra/",
+    "public_releases": 0,
+    "private_admin_settings": "not accessible",
+    "workflows_identical_to_inspected_main": true
   }
 }

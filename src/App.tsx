@@ -4,6 +4,7 @@ import { loadGraph } from "./lib/graph";
 import { makeRoastery as makeDemo } from "./data/roastery";
 import { Tool } from "./tool/Tool";
 import { LocaleProvider, storedLocale, translate, useI18n } from "./lib/i18n";
+import { TypeProvider } from "./lib/TypeContext";
 
 const KEY = "atlas.graph.v2";
 const KEY_V1 = "atlas.graph.v1";
@@ -132,7 +133,7 @@ function AppContent() {
         <button onClick={() => { const url = URL.createObjectURL(new Blob([storedWarning], { type: "application/json" })); const a = document.createElement("a"); a.href = url; a.download = "plyra-original-recovery.json"; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}>{t("Скачать прежнее сохранение")}</button>
         <button onClick={() => setStoredWarning(null)}>{t("Закрыть")}</button>
       </div>}
-      <Tool graph={graph} setGraph={setGraph} replaceGraph={replaceGraph} demo={makeDemo} saveStatus={status} undo={undo} redo={redo} canUndo={past.current.length > 0} canRedo={future.current.length > 0} />
+      <TypeProvider graph={graph}><Tool graph={graph} setGraph={setGraph} replaceGraph={replaceGraph} demo={makeDemo} saveStatus={status} undo={undo} redo={redo} canUndo={past.current.length > 0} canRedo={future.current.length > 0} /></TypeProvider>
     </Boundary>
   );
 }

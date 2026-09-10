@@ -1,11 +1,11 @@
 import { useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
-import { CARD_W, type Graph, type GNode, type View, type Pos, type NodeKind } from "../model/types";
+import { type Graph, type GNode, type View, type Pos, type NodeKind } from "../model/types";
 import { edgePath, nodeH, stubsForSheet, type Index } from "../lib/graph";
 import { identityRoutes, responsivePositions, sheetRoutes } from "../lib/spreadGraph";
 import { LINE_STYLE } from "../lib/lineStyles";
 import { ConnectionLegend } from "./ConnectionLegend";
 import { compositionStyle } from "./spreadLayout";
-import { allowsEdge, allowsNode, notationLoss } from "../lib/notation";
+import { dimensions } from "../lib/appearance";
 import { useI18n } from "../lib/i18n";
 import type { Placed } from "./SheetCanvas";
 import type { LayoutSnapshot } from "../lib/layoutViews";
@@ -14,7 +14,7 @@ export interface SpreadLayoutHandle { snapshot:()=>LayoutSnapshot }
 
 interface Props {
   graph:Graph; idx:Index; ids:string[]; active:string; ratio:number; compact:boolean;
-  selected:string|null; sizes:Map<string,number>; views:Record<string,View>; fitTick:number; kindFilter:Set<NodeKind>;
+  selected:string|null; sizes:Map<string,number>; views:Record<string,View>; fitTick:number; kindFilter:Set<NodeKind>; dimmedEdgeTypes?:Set<string>;
   showExternal:boolean; onShowExternal:(show:boolean)=>void;
   onActive:(sid:string)=>void; onReplace:(slot:number,sid:string)=>void; onAdd:(sid:string)=>void; onOpen:(sid:string)=>void;
   onMoveSheet:(sid:string,positions:Map<string,Pos>)=>void;
@@ -64,7 +64,8 @@ export function MultiSpread(p:Props) {
   const rectFor=(n:GNode,sid:string):Frame|null=>{
     const f=frames[sid],v=p.views[sid]??{x:40,y:40,k:1},pos=layouts.get(sid)?.get(n.id);
     if(!f||!pos||f.w<1||f.h<1)return null;
-    const x=v.x+pos.x*v.k,y=v.y+pos.y*v.k,w=CARD_W*v.k,h=nodeH(p.sizes,n.id)*v.k;
+    const dim=dimensions(n,sid,p.sizes);
+    const x=v.x+pos.x*v.k,y=v.y+pos.y*v.k,w=dim.w*v.k,h=dim.h*v.k;
     // Endpoints outside the pane attach to its boundary instead of silently losing the route.
     if(x+w<0||y+h<0||x>f.w||y>f.h){return{x:f.x+Math.max(2,Math.min(f.w-2,x+w/2)),y:f.y+Math.max(2,Math.min(f.h-2,y+h/2)),w:1,h:1};}
     const left=Math.max(0,x),top=Math.max(0,y);
@@ -83,7 +84,7 @@ export function MultiSpread(p:Props) {
       {p.ids.map((sid,slot)=>{
         if(!visible.includes(sid))return null;
         const s=p.idx.sheetById.get(sid);if(!s)return null;
-        const nodes=p.idx.bySheet.get(sid)??[],positions=layouts.get(sid)!,loss=notationLoss(p.graph,s);
+        const nodes=p.idx.bySheet.get(sid)??[],positions=layouts.get(sid)!;
         const placed=nodes.map((node)=>({node,...positions.get(node.id)!}));
         const move=(id:string,x:number,y:number)=>{
           p.onMoveSheet(sid,new Map([...positions,[id,{x,y}]]));
@@ -93,7 +94,6 @@ export function MultiSpread(p:Props) {
           <div className="spread-pane-header"><span className="layer-marker" style={{background:s.color}}/><span className="layer-prefix">{t("Слой:","Layer:")}</span>
             <select value={sid} aria-label={t(`Лист в окне ${slot+1}`,`Sheet in pane ${slot+1}`)} onChange={(e)=>p.onReplace(slot,e.target.value)}>{p.graph.sheets.map((sheet)=><option key={sheet.id} value={sheet.id}>{name(sheet.name)}</option>)}</select>
             <span className={nodes.length>(s.limit??15)?"pane-overflow":"pane-count"} title={t("Узлов / лимит")}>{nodes.length}/{s.limit??15}</span>
-            {!!(loss.nodes+loss.edges)&&<span className="pane-overflow" title={t(`Вне вида: ${loss.nodes} узлов, ${loss.edges} связей`,`Excluded: ${loss.nodes} nodes, ${loss.edges} edges`)}>!{loss.nodes+loss.edges}</span>}
             <button aria-label={t(`Предыдущий лист в окне ${slot+1}`,`Previous sheet in pane ${slot+1}`)} onClick={()=>step(slot,-1)}>‹</button><button aria-label={t(`Следующий лист в окне ${slot+1}`,`Next sheet in pane ${slot+1}`)} onClick={()=>step(slot,1)}>›</button>
             <button title={t("Открыть этот лист отдельно")} aria-label={t(`Развернуть лист ${name(s.name)}`,`Expand sheet ${name(s.name)}`)} onClick={()=>p.onOpen(sid)}>⤢</button><button aria-label={t(`Добавить узел на лист ${name(s.name)}`,`Add node to ${name(s.name)}`)} onClick={()=>p.onAdd(sid)}>＋</button>
           </div>
@@ -103,11 +103,11 @@ export function MultiSpread(p:Props) {
       {!p.compact&&<svg className="spread-connections" aria-hidden="true"><defs><marker id="spread-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill={LINE_STYLE.external.color}/></marker><linearGradient id="spread-identity-gold" gradientUnits="userSpaceOnUse" x1="0%" y1="0%" x2="100%" y2="0%"><stop stopColor={LINE_STYLE.identity.color}/><stop offset=".5" stopColor={LINE_STYLE.identity.light}/><stop offset="1" stopColor={LINE_STYLE.identity.color}/></linearGradient></defs>
         {connections&&routes.map((r)=>{const from=p.idx.nodeById.get(r.edge.from)!,to=p.idx.nodeById.get(r.edge.to)!,a=rectFor(from,r.fromSheet),b=rectFor(to,r.toSheet);if(!a||!b)return null;
           const high=p.selected===from.id||p.selected===to.id;
-          const excluded=!allowsNode(p.idx.sheetById.get(r.fromSheet),from)||!allowsNode(p.idx.sheetById.get(r.toSheet),to)||!allowsEdge(p.idx.sheetById.get(r.fromSheet),r.edge.kind)||!p.kindFilter.has(from.kind)||!p.kindFilter.has(to.kind);
+          const excluded=p.dimmedEdgeTypes?.has(r.edge.kind??"flow")||!p.kindFilter.has(from.kind)||!p.kindFilter.has(to.kind);
           const path=edgePath(a,b);
-          return <g key={r.key} data-spread-edge={r.edge.id} data-line-kind="external" opacity={excluded?.1:high?1:p.selected?.24:.7}><path d={path.d} fill="none" stroke={LINE_STYLE.external.color} strokeWidth={high?1.8:LINE_STYLE.external.width} strokeDasharray={LINE_STYLE.external.dash} markerEnd="url(#spread-arrow)"/>{r.edge.label&&high&&<text x={path.mid.x} y={path.mid.y-5} fontSize="10" textAnchor="middle" fill="#594272" stroke="#f7f7fc" strokeWidth="3" paintOrder="stroke">{name(r.edge.label)}</text>}</g>;
+          return <g key={r.key} data-spread-edge={r.edge.id} data-line-kind="external" opacity={excluded?.1:high?1:p.selected?.24:.7}><path d={path.d} fill="none" stroke={LINE_STYLE.external.color} strokeWidth={high?1.8:LINE_STYLE.external.width} strokeDasharray={LINE_STYLE.external.dash} markerEnd={r.edge.directed!==false?"url(#spread-arrow)":undefined}/>{r.edge.label&&high&&<text x={path.mid.x} y={path.mid.y-5} fontSize="10" textAnchor="middle" fill="#594272" stroke="#f7f7fc" strokeWidth="3" paintOrder="stroke">{name(r.edge.label)}</text>}</g>;
         })}
-        {identities&&identity.map((r)=>{const a=rectFor(r.node,r.fromSheet),b=rectFor(r.node,r.toSheet);if(!a||!b)return null;const path=edgePath(a,b),high=p.selected===r.node.id,dim=!p.kindFilter.has(r.node.kind)||!allowsNode(p.idx.sheetById.get(r.fromSheet),r.node)||!allowsNode(p.idx.sheetById.get(r.toSheet),r.node);return <g key={r.key} data-identity-node={r.node.id} data-line-kind="identity" opacity={dim?.12:p.selected&&!high?.18:.95}><path d={path.d} fill="none" stroke={LINE_STYLE.identity.glow} strokeWidth={high?7:5} opacity=".17"/><path d={path.d} fill="none" stroke={LINE_STYLE.identity.color} strokeWidth={high?3.2:2.6}/><path d={path.d} fill="none" stroke="url(#spread-identity-gold)" strokeWidth={high?1.9:1.3}/><circle cx={path.mid.x} cy={path.mid.y} r={5} fill="#fffaee" stroke={LINE_STYLE.identity.color} strokeWidth="1.1"/>{high&&<text x={path.mid.x} y={path.mid.y-10} textAnchor="middle" fill={LINE_STYLE.identity.color} fontSize="11" stroke="#fffaf1" strokeWidth="4" paintOrder="stroke">{t("Один ID","Same ID")} · {name(r.node.name)}</text>}</g>;})}
+        {identities&&identity.map((r)=>{const a=rectFor(r.node,r.fromSheet),b=rectFor(r.node,r.toSheet);if(!a||!b)return null;const path=edgePath(a,b),high=p.selected===r.node.id,dim=!p.kindFilter.has(r.node.kind);return <g key={r.key} data-identity-node={r.node.id} data-line-kind="identity" opacity={dim?.12:p.selected&&!high?.18:.95}><path d={path.d} fill="none" stroke={LINE_STYLE.identity.glow} strokeWidth={high?7:5} opacity=".17"/><path d={path.d} fill="none" stroke={LINE_STYLE.identity.color} strokeWidth={high?3.2:2.6}/><path d={path.d} fill="none" stroke="url(#spread-identity-gold)" strokeWidth={high?1.9:1.3}/><circle cx={path.mid.x} cy={path.mid.y} r={5} fill="#fffaee" stroke={LINE_STYLE.identity.color} strokeWidth="1.1"/>{high&&<text x={path.mid.x} y={path.mid.y-10} textAnchor="middle" fill={LINE_STYLE.identity.color} fontSize="11" stroke="#fffaf1" strokeWidth="4" paintOrder="stroke">{t("Один ID","Same ID")} · {name(r.node.name)}</text>}</g>;})}
       </svg>}
     </div>
   </div>;

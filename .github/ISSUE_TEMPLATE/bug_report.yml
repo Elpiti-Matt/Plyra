@@ -5,7 +5,7 @@ body:
     id: version
     attributes:
       label: Plyra version, browser and device
-      placeholder: v0.3.0-rc.1, Safari, iPhone
+      placeholder: v0.7.0-rc.4, Safari, iPhone
     validations:
       required: true
   - type: textarea
@@ -19,4 +19,4 @@ body:
     id: context
     attributes:
       label: View, viewport size and screenshot
-      description: Include sheet/spread/stack mode and whether the file was opened locally or hosted.
+      description: Include Sheets (single sheet or overview), Spread, Stack, Contents or All-to-1 and whether the file was opened locally or hosted.

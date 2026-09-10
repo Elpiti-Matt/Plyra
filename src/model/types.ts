@@ -1,4 +1,4 @@
-export type NodeKind =
+export type BuiltinNodeKind =
   | "entity"
   | "process"
   | "decision"
@@ -9,17 +9,37 @@ export type NodeKind =
   | "person"
   | "note";
 
-export type EdgeKind = "flow" | "depends" | "supports" | "contradicts" | "ref";
+export type NodeKind = BuiltinNodeKind | (string & {});
+export type EdgeKind = "flow" | "depends" | "supports" | "contradicts" | "ref" | (string & {});
+
+export interface TypeDefinition { id: string; label: string; labelEn?: string; description?: string; color: string }
+export type NotationId = "plyra" | "flowchart" | "canvas" | "bpmn" | "drawio";
+export type NodeShape = "rectangle" | "rounded" | "ellipse" | "diamond" | "parallelogram" | "cylinder" | "document" | "text" | "group";
+export interface NodeTypeDefinition extends TypeDefinition { base: BuiltinNodeKind; glyph?: string; notation?: NotationId; shape?: NodeShape }
+/** Legacy style fields are accepted on input; line rendering belongs to the view. */
+export interface EdgeTypeDefinition extends TypeDefinition { directed?: boolean; dash?: string }
+export interface SheetTypeDefinition extends TypeDefinition {}
+export type AttributeDataType = "text" | "number" | "boolean" | "date" | "url" | "select";
+export interface AttributeDefinition { id:string; label:string; labelEn?:string; description?:string; dataType:AttributeDataType; options?:string[] }
+export type AttributeValue = string | number | boolean | null;
+export interface TypeRegistry { nodes: NodeTypeDefinition[]; edges: EdgeTypeDefinition[]; sheets: SheetTypeDefinition[]; tags:TypeDefinition[]; attributes:AttributeDefinition[] }
+export interface NodeAppearance { width:number; height:number; shape:NodeShape; fill:string; stroke:string; fontColor:string; fontSize?:number; strokeWidth?:number; rotation?:number; bold?:boolean; align?:"left"|"center"|"right"; marker?:"start"|"end"|"intermediate"|"exclusive"|"parallel"|"inclusive"; sourceType?:string }
+export interface EdgeRoute { points:Pos[]; from:{x:number;y:number;width:number;height:number}; to:{x:number;y:number;width:number;height:number} }
 
 export interface Sheet {
   id: string;
   name: string;
   notation: string;
+  /** Classification is independent from the notation of the diagram. */
+  typeId?: string;
+  tags?: string[];
   color: string;
   limit?: number;
   description?: string;
   /** Keep the authored/optimized positions in spreads; otherwise reflow to fit. */
   layout?: "manual";
+  /** Position of the whole sheet on the overview; independent of node positions. */
+  overviewPos?: Pos;
 }
 
 export interface Pos {
@@ -36,6 +56,9 @@ export interface GNode {
   kind: NodeKind;
   body: string;
   tags?: string[];
+  attributes?: Record<string, AttributeValue>;
+  /** Geometry and shapes belong to an appearance, never to the shared entity. */
+  appearance?: Record<string, NodeAppearance>;
 }
 
 export interface GEdge {
@@ -44,17 +67,21 @@ export interface GEdge {
   to: string;
   label?: string;
   kind?: EdgeKind;
+  directed?: boolean;
+  sourceType?: string;
+  routes?: Record<string, EdgeRoute>;
 }
 
 export interface Graph {
-  version: 2;
+  version: 2 | 3;
   title: string;
   description?: string;
   sheets: Sheet[];
   nodes: GNode[];
   edges: GEdge[];
-  /** Independent positions for the all-nodes canvas; native JSON round-trips. */
+  /** Independent positions for the All-to-1 canvas; native JSON round-trips. */
   flatPositions?: Record<string, Pos>;
+  types?: TypeRegistry;
 }
 
 export interface View {
@@ -63,7 +90,7 @@ export interface View {
   k: number;
 }
 
-export type Mode = "sheet" | "spread" | "stack" | "atlas" | "flat" | "generate" | "faq";
+export type Mode = "sheet" | "board" | "spread" | "stack" | "atlas" | "flat" | "generate" | "faq";
 
 export const KINDS: { id: NodeKind; label: string; glyph: string }[] = [
   { id: "entity", label: "Сущность", glyph: "▭" },

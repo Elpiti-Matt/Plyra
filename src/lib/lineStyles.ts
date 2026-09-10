@@ -1,4 +1,4 @@
-/** Plyra navigation semantics. Native notation adapters must keep their own internal line grammar. */
+/** Plyra navigation semantics. Line grammar is shared by native and imported diagrams. */
 export const LINE_STYLE = {
   local: { color: "#778293", width: 1, dash: undefined },
   external: { color: "#7b7893", width: 1.35, dash: "6 5" },

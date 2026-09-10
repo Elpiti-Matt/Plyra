@@ -1,8 +1,6 @@
 import {
   CARD_H_DEFAULT,
   CARD_W,
-  EDGE_KINDS,
-  KINDS,
   STUB_H,
   type EdgeKind,
   type GEdge,
@@ -12,6 +10,9 @@ import {
   type Pos,
   type Sheet,
 } from "../model/types";
+import { readAttributes } from "./attributes";
+import { readAppearances, readRoutes, dimensions } from "./appearance";
+import { readTypes, typesFor, sheetTypeId } from "./typeRegistry";
 
 // ---------- утилиты ----------
 
@@ -33,9 +34,6 @@ export function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
 }
 
-const KIND_SET = new Set<string>(KINDS.map((k) => k.id));
-const EDGE_SET = new Set<string>(EDGE_KINDS.map((k) => k.id));
-
 // ---------- миграция и валидация ----------
 
 export interface LoadResult {
@@ -53,8 +51,16 @@ export function loadGraph(input: unknown): LoadResult {
   const errors: string[] = [];
   if (!isObj(input)) return { graph: null, errors: ["Корень JSON должен быть объектом"], migrated: false };
   let raw: Record<string, unknown> = input;
-  if (raw.version !== undefined && raw.version !== 1 && raw.version !== 2)
+  if (raw.version !== undefined && raw.version !== 1 && raw.version !== 2 && raw.version !== 3)
     return { graph: null, errors: ["Неизвестная версия формата"], migrated: false };
+  let types:Graph["types"];
+  try {
+    if(raw.types!==undefined && raw.version!==3)throw new Error("Словари типов требуют version: 3");
+    if(raw.version===3)types=readTypes(raw.types);
+  }catch(e){return {graph:null,errors:[(e as Error).message],migrated:false};}
+  const registry=typesFor({types});
+  const KIND_SET=new Set(registry.nodes.map(k=>k.id));
+  const EDGE_SET=new Set(registry.edges.map(k=>k.id));
   if (raw.sheets === undefined && Array.isArray(raw.nodes) && Array.isArray(raw.edges)) {
     const ids = new Set<string>();
     for (const n of raw.nodes) if (isObj(n)) {
@@ -68,7 +74,7 @@ export function loadGraph(input: unknown): LoadResult {
   }
   if (raw.nodes.length > 1000 || raw.edges.length > 5000 || raw.sheets.length > 100)
     return { graph: null, errors: ["Лимит импорта: 1000 узлов, 5000 связей, 100 листов"], migrated: false };
-  const migrated = raw.version !== 2;
+  const migrated = raw.version !== 2 && raw.version !== 3;
   const rawEdges = raw.edges;
   const validId = (id: unknown) => typeof id === "string" && id.trim().length > 0 && id.length <= 200 && !["__proto__", "constructor", "prototype", "__flat"].includes(id);
   const positions = new Map<string, number>();
@@ -79,18 +85,24 @@ export function loadGraph(input: unknown): LoadResult {
     if (!isObj(s) || typeof s.id !== "string" || !validId(s.id)) return errors.push(`sheets[${i}]: нет id`);
     if (sheetIds.has(s.id)) return errors.push(`sheets[${i}]: дубликат id «${s.id}»`);
     sheetIds.add(s.id);
+    if(s.typeId!==undefined&&!registry.sheets.some(t=>t.id===s.typeId))errors.push(`Лист «${s.id}»: неизвестный тип листа`);
+    if(s.tags!==undefined&&(!Array.isArray(s.tags)||s.tags.length>200||s.tags.some(id=>!registry.tags.some(t=>t.id===id))))errors.push(`Лист «${s.id}»: неизвестные теги`);
     if (String(s.name ?? s.id).length > 80) errors.push(`Лист «${s.id}»: название длиннее 80 символов`);
     if (s.layout !== undefined && s.layout !== "manual") errors.push(`Лист «${s.id}»: неизвестный режим расположения`);
+    if(s.overviewPos!==undefined&&(!isObj(s.overviewPos)||![s.overviewPos.x,s.overviewPos.y].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<=10000000)))errors.push(`Лист «${s.id}»: некорректная позиция в обзоре`);
     const color = typeof s.color === "string" && /^#[0-9a-fA-F]{6}$/.test(s.color) ? s.color : "#64748b";
     const limit = typeof s.limit === "number" && Number.isFinite(s.limit) ? Math.floor(clamp(s.limit, 3, 60)) : 15;
     sheets.push({
       id: s.id,
       name: String(s.name ?? s.id).slice(0, 80),
-      notation: String(s.notation ?? "свободная").slice(0, 60),
+      notation: String(s.notation ?? "plyra").slice(0, 60),
+      typeId:typeof s.typeId==="string"?s.typeId:sheetTypeId({notation:String(s.notation??"свободная")} as Sheet,registry),
+      tags:Array.isArray(s.tags)?[...new Set(s.tags as string[])]:[],
       color,
       limit,
       description: typeof s.description === "string" ? s.description.slice(0, 2000) : undefined,
       ...(s.layout === "manual" ? {layout:"manual" as const} : {}),
+      ...(isObj(s.overviewPos)?{overviewPos:{x:Number(s.overviewPos.x),y:Number(s.overviewPos.y)}}:{}),
     });
   });
   if (sheets.length === 0) errors.push("Нужен хотя бы один лист");
@@ -131,6 +143,8 @@ export function loadGraph(input: unknown): LoadResult {
     if (isObj(n.body) && Array.isArray(n.body.table) && n.body.table.some((row) => !Array.isArray(row))) errors.push(`Узел «${n.id}»: некорректная таблица`);
     if (Array.isArray(n.tags) && n.tags.length > 20) errors.push(`Узел «${n.id}»: больше 20 тегов`);
     const kind = KIND_SET.has(String(n.kind)) ? (n.kind as NodeKind) : "entity";
+    let attributes:GNode["attributes"],appearance:GNode["appearance"];
+    try{attributes=readAttributes(n.attributes,registry);appearance=readAppearances(n.appearance,sheetsArr);}catch(e){errors.push(`Узел «${n.id}»: ${(e as Error).message}`);}
     nodeIds.add(n.id);
     nodes.push({
       id: n.id,
@@ -139,6 +153,7 @@ export function loadGraph(input: unknown): LoadResult {
       name: String(n.name ?? "Без имени").slice(0, 200),
       kind,
       body: bodyToString(n.body),
+      ...(attributes?{attributes}:{}),...(appearance?{appearance}:{}),
       tags: Array.isArray(n.tags) ? n.tags.map(String).slice(0, 20) : undefined,
     });
   });
@@ -155,11 +170,16 @@ export function loadGraph(input: unknown): LoadResult {
     if (e.kind !== undefined && e.kind !== "" && !EDGE_SET.has(String(e.kind))) errors.push(`Ребро «${id}»: неизвестный тип «${e.kind}»`);
     if (typeof e.label === "string" && e.label.length > 120) errors.push(`Ребро «${id}»: подпись длиннее 120 символов`);
     if (!nodeIds.has(e.from) || !nodeIds.has(e.to)) return errors.push(`edges[${i}] ${e.from}→${e.to}: висячий конец, пропущено`);
+    let routes:GEdge["routes"];
+    try{routes=readRoutes(e.routes,sheetIds);}catch(err){errors.push(`Связь «${id}»: ${(err as Error).message}`);}
+    if(e.directed!==undefined&&typeof e.directed!=="boolean")errors.push(`Связь «${id}»: некорректное направление`);
     edgeIds.add(id);
     edges.push({
       id,
       from: e.from,
       to: e.to,
+      ...(routes?{routes}:{}),...(typeof e.directed==="boolean"?{directed:e.directed}:{}),
+      ...(typeof e.sourceType==="string"?{sourceType:e.sourceType.slice(0,160)}:{}),
       kind: EDGE_SET.has(String(e.kind)) ? (e.kind as EdgeKind) : "flow",
       label: typeof e.label === "string" ? e.label.slice(0, 120) : undefined,
     });
@@ -179,12 +199,13 @@ export function loadGraph(input: unknown): LoadResult {
   if (sheets.length === 0 || errors.length) return { graph: null, errors, migrated };
   return {
     graph: {
-      version: 2,
+      version: raw.version===3 ? 3 : 2,
       title: String(raw.title ?? "Plyra").slice(0, 120),
       description: typeof raw.description === "string" ? raw.description : undefined,
       sheets,
       nodes,
       edges,
+      ...(types ? {types} : {}),
       ...(flatPositions ? {flatPositions} : {}),
     },
     errors,
@@ -361,7 +382,7 @@ export function stubsForSheet(g: Graph, idx: Index, sheetId: string, sizes: Size
   for (const n of locals) {
     const p = positions?.get(n.id) ?? n.pos[sheetId];
     minX = Math.min(minX, p.x);
-    maxX = Math.max(maxX, p.x + CARD_W);
+    maxX = Math.max(maxX, p.x + dimensions(n,sheetId,sizes).w);
   }
   const groups = new Map<string, Stub>();
   for (const e of g.edges) {
@@ -387,7 +408,7 @@ export function stubsForSheet(g: Graph, idx: Index, sheetId: string, sizes: Size
     let sy = 0;
     for (const lid of st.locals) {
       const ln = idx.nodeById.get(lid)!;
-      sy += (positions?.get(lid) ?? ln.pos[sheetId]).y + nodeH(sizes, lid) / 2;
+      sy += (positions?.get(lid) ?? ln.pos[sheetId]).y + dimensions(ln,sheetId,sizes).h / 2;
     }
     st.y = sy / st.locals.length - STUB_H / 2;
     st.x = st.side === "right" ? maxX + 90 : minX - 90 - CARD_W;
@@ -407,7 +428,7 @@ export function stubsForSheet(g: Graph, idx: Index, sheetId: string, sizes: Size
 export function freeSpot(idx: Index, sheetId: string, sizes: Sizes): Pos {
   const locals = idx.bySheet.get(sheetId) ?? [];
   if (locals.length === 0) return { x: 80, y: 80 };
-  const occupied = locals.map((n) => ({ x: n.pos[sheetId].x, y: n.pos[sheetId].y, w: CARD_W, h: nodeH(sizes, n.id) }));
+  const occupied = locals.map((n) => ({ x: n.pos[sheetId].x, y: n.pos[sheetId].y, ...dimensions(n,sheetId,sizes) }));
   let maxY = -Infinity;
   let minX = Infinity;
   for (const r of occupied) {

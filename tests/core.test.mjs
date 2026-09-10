@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { makeRoastery, makeDemo, loadGraph, buildIndex, flatten, stubsForSheet, edgesBetweenSheets, lint, parseCSV, csvGraph, toCanvas, splitSheets, safeSrc, notationLoss, forceLayout } from "../.qa/support.mjs";
+import { makeRoastery, makeDemo, makeSoftwareDemo, loadGraph, buildIndex, flatten, stubsForSheet, edgesBetweenSheets, lint, parseCSV, csvGraph, toCanvas, splitSheets, safeSrc, notationLoss, forceLayout, sheetTypeId, emptyProject, overviewPositions, moveOverviewSheet, moveOverviewNode, fitOverview, serializePlyra } from "../.qa/support.mjs";
 
-test("both demo datasets load and retain every node, edge and membership", () => {
-  for (const g of [makeRoastery(), makeDemo()]) {
+test("all demo datasets and languages retain every node, edge and membership", () => {
+  for (const g of [makeRoastery(), makeDemo(), makeSoftwareDemo("en")]) {
     const result = loadGraph(JSON.parse(JSON.stringify(g)));
     assert.equal(result.errors.length, 0);
-    assert.deepEqual(JSON.parse(JSON.stringify(result.graph)), JSON.parse(JSON.stringify(g)));
+    assert.deepEqual(JSON.parse(JSON.stringify(result.graph)), JSON.parse(JSON.stringify({...g,sheets:g.sheets.map(s=>({...s,typeId:sheetTypeId(s),tags:[]}))})));
   }
 });
 test("legacy and generic graphs receive deterministic coordinates and edge IDs", () => {
@@ -42,9 +42,9 @@ test("a shared third sheet must not hide the boundary edge between A and B", () 
   assert.equal(stubsForSheet(g,idx,"a",new Map()).length,1);
   assert.equal(stubsForSheet(g,idx,"c",new Map()).length,0);
 });
-test("notation reports view exclusions and never mutates the canonical graph", () => {
+test("sheet classification accepts all node and relation types and never mutates the canonical graph", () => {
   const g=makeRoastery(), before=JSON.stringify(g), sheet={...g.sheets.find((s)=>s.id==="roasting"),notation:"процесс"};
-  const loss=notationLoss(g,sheet);assert.equal(loss.nodes,3);assert.ok(loss.edges>0);
+  const loss=notationLoss(g,sheet);assert.equal(loss.nodes,0);assert.equal(loss.edges,0);
   assert.equal(JSON.stringify(g),before);
 });
 test("CSV supports BOM, escaped quotes, quoted commas and multiline bodies", () => {
@@ -63,10 +63,10 @@ test("Canvas IDs are unique, all edge endpoints resolve, every canonical edge ap
   assert.ok(c.nodes.every((n)=>[n.x,n.y,n.width,n.height].every(Number.isFinite)));
 });
 test("sheet splitting is deterministic, bounded, idempotent and preserves identities and edges", () => {
-  const g=makeDemo();g.sheets.forEach((s)=>s.limit=15);
-  const r=splitSheets(g);assert.deepEqual(r,splitSheets(g));assert.deepEqual(r,splitSheets(r));
+  const g=makeDemo();g.sheets.forEach((s)=>s.limit=5);
+  const r=splitSheets(g);assert.ok(r.sheets.length>g.sheets.length);assert.deepEqual(r,splitSheets(g));assert.deepEqual(r,splitSheets(r));
   assert.deepEqual(r.edges,g.edges);assert.deepEqual(r.nodes.map((n)=>n.id),g.nodes.map((n)=>n.id));
-  for(const s of r.sheets)assert.ok(r.nodes.filter((n)=>n.sheets.includes(s.id)).length<=15);
+  for(const s of r.sheets)assert.ok(r.nodes.filter((n)=>n.sheets.includes(s.id)).length<=5);
   assert.ok(loadGraph(r).graph);
 });
 test("image URLs cannot perform network requests", () => {
@@ -119,10 +119,10 @@ test('view reflow fills a wide sheet differently from a tall one without changin
   for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){const a=boxes[i],b=boxes[j];assert.ok(a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y);}
 });
 
-test('both AI examples load with shared identities and English notation aliases',async()=>{
+test('both AI v3 examples load with typed attributes, sheet classification and shared identities',async()=>{
   const {generationExample,generationPrompt}=await import('../.qa/support.mjs');
-  for(const locale of ['ru','en']){const g=generationExample(locale);const r=loadGraph(JSON.parse(JSON.stringify(g)));assert.deepEqual(r.errors,[]);assert.deepEqual(JSON.parse(JSON.stringify(r.graph)),g);assert.equal(g.nodes.filter(n=>n.id==='blend').length,1);assert.equal(g.nodes[0].sheets.length,2);assert.ok(generationPrompt(locale).includes(JSON.stringify(g,null,2)));}
-  const g=generationExample('en');g.sheets[0].notation='process';assert.equal(notationLoss(g,g.sheets[0]).nodes,1);
+  for(const locale of ['ru','en']){const g=generationExample(locale);const r=loadGraph(JSON.parse(JSON.stringify(g)));assert.deepEqual(r.errors,[]);assert.equal(r.graph.version,3);assert.deepEqual(JSON.parse(JSON.stringify(r.graph.nodes)),g.nodes);assert.deepEqual(JSON.parse(JSON.stringify(r.graph.sheets)),g.sheets);assert.equal(r.graph.types.attributes.length,6);assert.deepEqual(new Set(r.graph.types.attributes.map(d=>d.dataType)),new Set(['text','number','boolean','date','url','select']));assert.equal(r.graph.nodes[0].attributes.unitCost,null);assert.equal(r.graph.nodes[0].attributes.confirmed,false);assert.equal(g.nodes.filter(n=>n.id==='blend').length,1);assert.equal(g.nodes[0].sheets.length,2);assert.ok(generationPrompt(locale).includes(JSON.stringify(g,null,2)));}
+  const g=generationExample('en');g.sheets[0].notation='process';assert.equal(notationLoss(g,g.sheets[0]).nodes,0);
 });
 
 test('identity lines connect repeated appearances without manufacturing graph edges',async()=>{
@@ -227,4 +227,48 @@ test('dense layouts keep every node and disclose their bounded edge sample',()=>
   const result=optimizeLayout({nodes,links,groups:[{id:'one',aspect:1.6}]});
   assert.equal(result.positions.size,1000);assert.equal(result.after.sampled,true);assert.equal(result.after.checkedEdges,400);assert.equal(result.after.totalEdges,5000);
   assert.ok(result.evaluated<=18);assert.ok(compareLayout(result.after,result.before)<=0);
+});
+
+test('overview sheet layout persists independently from every node position and diagram route',()=>{
+ const g=emptyProject();g.sheets.push({...g.sheets[0],id:'second'});g.nodes=[{id:'shared',kind:'entity',name:'Shared',body:'One entity',sheets:['main','second'],pos:{main:{x:25,y:45},second:{x:80,y:60}}}];
+ const snapshot=structuredClone(g),positions=overviewPositions(g),moved=moveOverviewSheet(g,'main',{x:370,y:-90},positions);
+ assert.deepEqual(g,snapshot);assert.deepEqual(moved.nodes,g.nodes);assert.deepEqual(moved.edges,g.edges);assert.deepEqual(moved.sheets[0].overviewPos,{x:370,y:-90});assert.deepEqual(moved.sheets[1].overviewPos,positions.get('second'));
+ const r=loadGraph(JSON.parse(serializePlyra(moved)));assert.deepEqual(r.errors,[]);assert.deepEqual(r.graph.sheets.map(s=>s.overviewPos),moved.sheets.map(s=>s.overviewPos));
+ const added={...moved,sheets:[...moved.sheets,{...g.sheets[0],id:'new'}]},next=overviewPositions(added);assert.deepEqual(next.get('main'),{x:370,y:-90});assert.deepEqual(next.get('second'),positions.get('second'));assert.ok(next.has('new'));
+});
+
+test('overview node movement edits one appearance, retains identity and does not move any sheet',()=>{
+ const g=emptyProject();g.sheets[0].overviewPos={x:500,y:800};g.sheets.push({...g.sheets[0],id:'other',overviewPos:{x:1300,y:0}});g.nodes=[{id:'shared',kind:'entity',name:'Shared',body:'Common',sheets:['main','other'],pos:{main:{x:10,y:20},other:{x:80,y:90}}}];
+ const snapshot=structuredClone(g),next=moveOverviewNode(g,'shared','other',{x:140,y:160});assert.deepEqual(g,snapshot);assert.deepEqual(next.sheets,g.sheets);assert.deepEqual(next.nodes[0].pos.main,{x:10,y:20});assert.deepEqual(next.nodes[0].pos.other,{x:140,y:160});assert.deepEqual(next.nodes[0].sheets,['main','other']);assert.equal(next.nodes[0].body,'Common');assert.equal(moveOverviewNode(g,'shared','missing',{x:1,y:2}),g);
+});
+
+test('overview geometry rejects invalid coordinates and fits large or empty projects finitely',()=>{
+ for(const pos of [{x:Infinity,y:0},{x:1,y:'2'},{x:1e9,y:0},null,[1,2]]){const g=emptyProject();g.sheets[0].overviewPos=pos;assert.equal(loadGraph(g).graph,null);}
+ const g=emptyProject();g.sheets=Array.from({length:100},(_,i)=>({...g.sheets[0],id:`s${i}`}));const positions=overviewPositions(g),fit=fitOverview(positions,390,600);assert.equal(positions.size,100);assert.ok([fit.x,fit.y,fit.k].every(Number.isFinite));assert.ok(fit.k>0);assert.deepEqual(overviewPositions(g),positions);assert.ok(fitOverview(new Map(),390,600).k>0);
+});
+
+
+test('focused overview connects every shared appearance directly and excludes unrelated sheet routes',async()=>{
+ const {overviewRoutes}=await import('../.qa/support.mjs');
+ const g=loadGraph({sheets:['a','b','c'].map(id=>({id,name:id})),nodes:[
+  {id:'shared',sheets:['a','b','c']},{id:'x',sheets:['a']},{id:'y',sheets:['b']},{id:'z',sheets:['c']}
+ ],edges:[{id:'xy',from:'x',to:'y'},{id:'zx',from:'z',to:'x'},{id:'yz',from:'y',to:'z'}]}).graph;
+ const before=JSON.stringify(g),idx=buildIndex(g),visible=['a','b','c'];
+ const focused=overviewRoutes(g,idx,visible,'a');
+ assert.deepEqual(new Set(focused.edges.map(r=>r.edge.id)),new Set(['xy','zx']));
+ assert.ok(focused.edges.some(r=>r.edge.id==='zx'&&r.fromSheet==='c'&&r.toSheet==='a'),'incoming direction survives');
+ assert.deepEqual(focused.identities.map(r=>[r.fromSheet,r.toSheet]),[['a','b'],['a','c']]);
+ assert.deepEqual(overviewRoutes(g,idx,[...visible,'b'],'a'),focused);
+ assert.deepEqual(overviewRoutes(g,idx,visible,'missing'),{edges:[],identities:[]});
+ assert.equal(overviewRoutes(g,idx,visible).edges.length,3);
+ assert.equal(JSON.stringify(g),before);
+});
+
+test('downloadable AI prompts and examples match the v3 contract used by the application',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {generationExample,generationPrompt}=await import('../.qa/support.mjs');
+ for(const locale of ['ru','en']){
+  assert.equal(readFileSync(`docs/AI-PROMPT.${locale}.txt`,'utf8'),generationPrompt(locale)+'\n');
+  assert.deepEqual(JSON.parse(readFileSync(`data/ai-example-${locale}.json`,'utf8')),generationExample(locale));
+ }
 });

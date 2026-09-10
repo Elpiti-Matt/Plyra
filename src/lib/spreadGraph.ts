@@ -50,3 +50,12 @@ export function responsivePositions(nodes: GNode[], sizes: Sizes, width: number,
   }
   return best;
 }
+
+/** Focused overview uses direct routes to every other sheet, including all shared appearances. */
+export function overviewRoutes(graph:Graph,idx:Index,visible:string[],focus?:string):{edges:SheetRoute[];identities:IdentityRoute[]} {
+  const ids=[...new Set(visible)];
+  if(!focus)return {edges:sheetRoutes(graph,idx,ids),identities:identityRoutes(graph,ids)};
+  if(!ids.includes(focus))return {edges:[],identities:[]};
+  const others=ids.filter(sid=>sid!==focus);
+  return {edges:others.flatMap(sid=>sheetRoutes(graph,idx,[focus,sid])),identities:others.flatMap(sid=>identityRoutes(graph,[focus,sid]))};
+}

@@ -12,10 +12,11 @@ export function useSizes(): [Sizes, (el: HTMLElement | null, id: string) => void
   useLayoutEffect(() => {
     const ro = new ResizeObserver((entries) => {
       for (const en of entries) {
-        const id = (en.target as HTMLElement).dataset.nid;
+        const id = (en.target as HTMLElement).dataset.measureId??(en.target as HTMLElement).dataset.nid;
         if (!id) continue;
         const h = en.borderBoxSize?.[0]?.blockSize ?? (en.target as HTMLElement).offsetHeight;
         pending.current.set(id, Math.round(h));
+        const nid=(en.target as HTMLElement).dataset.nid;if(nid)pending.current.set(nid,Math.round(h));
       }
       cancelAnimationFrame(raf.current);
       raf.current = requestAnimationFrame(() => {
@@ -47,6 +48,7 @@ export function useSizes(): [Sizes, (el: HTMLElement | null, id: string) => void
     if (prev && prev !== el) ro?.unobserve(prev);
     if (el) {
       if (prev === el) return;
+      el.dataset.measureId=id;
       els.current.set(id, el);
       ro?.observe(el);
     } else els.current.delete(id);
